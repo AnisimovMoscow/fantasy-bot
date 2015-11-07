@@ -7,7 +7,7 @@ class Tournament extends ActiveRecord
 {
     public function rules() {
         return [
-            [['url', 'name'], 'safe'],
+            [['url', 'name', 'deadline'], 'safe'],
         ];
     }
 }

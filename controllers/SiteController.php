@@ -6,6 +6,8 @@ use yii\web\Controller;
 use TelegramBot\Api\BotApi;
 use app\models\User;
 use app\models\Team;
+use DateTime;
+use DateTimeZone;
 
 class SiteController extends Controller
 {
@@ -70,6 +72,33 @@ class SiteController extends Controller
 		$bot->sendMessage($chat['id'], $message);
 	}
 	
+	public function commandDeadlines($params, $chat) {
+		$user = User::findOne(['chat_id' => $chat['id']]);
+		$formatter = Yii::$app->formatter;
+		if ($user === null) {
+			$message = 'Кажется мы ещё не здоровались. Отправь мне /start';
+		} else {
+			$teams = Team::findAll(['user_id' => $user->id]);
+			if (count($teams) > 0) {
+				$message = 'Дедлайны:';
+				$deadlines = [];
+				foreach ($teams as $team) {
+					$deadlines[$team->tournament->name] = $team->tournament->deadline;
+				}
+				asort($deadlines);
+				foreach ($deadlines as $name => $deadline) {
+					$date = new DateTime($deadline, new DateTimeZone(Yii::$app->timeZone));
+					$message .= "\n- ".$name.': '.$formatter->asDatetime($date, 'd LLLL (E) HH:mm');
+				}
+			} else {
+				$message = 'Ты не создал ещё ни одной команды или не отправил мне ссылку на свой профиль. Набери /profile [url]';
+			}
+		}
+		
+		$bot = new BotApi(Yii::$app->params['token']);
+		$bot->sendMessage($chat['id'], $message);
+	}
+	
 	public function commandTeams($params, $chat) {
 		$user = User::findOne(['chat_id' => $chat['id']]);
 		if ($user === null) {
@@ -93,6 +122,7 @@ class SiteController extends Controller
 	public function commandHelp($params, $chat) {
 		$message = 'Вот команды, которые я понимаю:'."\n";
 		$message .= '/profile [url] - сообщить ссылку на свой профиль'."\n";
+		$message .= '/deadlines - дедлайны турниров'."\n";
 		$message .= '/teams - список твоих фентези-команд';
 		$bot = new BotApi(Yii::$app->params['token']);
 		$bot->sendMessage($chat['id'], $message);
