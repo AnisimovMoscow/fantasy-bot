@@ -23,9 +23,17 @@ return [
             'targets' => [
                 [
                     'class' => 'yii\log\FileTarget',
-                    'levels' => ['error', 'warning', 'info'],
+                    'levels' => ['error', 'warning'],
+                ],
+				[
+                    'class' => 'yii\log\FileTarget',
+                    'levels' => ['info'],
+                    'logFile' => '@runtime/logs/info.log',
+                    'logVars' => [],
                 ],
             ],
         ],
+		'db' => require(__DIR__ . '/db.php'),
     ],
+	'params' => require(__DIR__ . '/params.php'),
 ];
