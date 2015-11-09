@@ -63,7 +63,6 @@ class TournamentsController extends Controller
 					}
 				}
 			}
-			echo ' '.$tournament->name.' - '.$team->name."\n";
 		}
     }
 	
