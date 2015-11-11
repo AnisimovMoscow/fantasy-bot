@@ -12,6 +12,10 @@ class User extends ActiveRecord
         ];
     }
 	
+    public function getTeams() {
+        return $this->hasMany(Team::className(), ['user_id' => 'id']);
+    }
+    
 	public function updateTeams() {
 		if (!empty($this->profile_url)) {
 			$dom = new DOMDocument();
@@ -25,26 +29,28 @@ class User extends ActiveRecord
 					$links  = $div->getElementsByTagName('a');
 					
 					$tournamentUrl = $host.$links->item(1)->getAttribute('href');
-					$tournament = Tournament::findOne(['url' => $tournamentUrl]);
-					if ($tournament === null) {
-						$tournament = new Tournament([
-							'url' => $tournamentUrl,
-							'name' => $links->item(1)->nodeValue,
-						]);
-						$tournament->save();
-					}
-					
-					$teamUrl = $host.$links->item(0)->getAttribute('href');
-					$team = Team::findOne(['url' => $teamUrl]);
-					if ($team === null) {
-						$team = new Team([
-							'user_id' => $this->id,
-							'url' => $teamUrl,
-							'name' => $links->item(0)->nodeValue,
-							'tournament_id' => $tournament->id,
-						]);
-						$team->save();
-					}
+                    if (preg_match('/.*\/fantasy\/football\/.*/', $tournamentUrl)) {
+                        $tournament = Tournament::findOne(['url' => $tournamentUrl]);
+                        if ($tournament === null) {
+                            $tournament = new Tournament([
+                                'url' => $tournamentUrl,
+                                'name' => $links->item(1)->nodeValue,
+                            ]);
+                            $tournament->save();
+                        }
+
+                        $teamUrl = $host.$links->item(0)->getAttribute('href');
+                        $team = Team::findOne(['url' => $teamUrl]);
+                        if ($team === null) {
+                            $team = new Team([
+                                'user_id' => $this->id,
+                                'url' => $teamUrl,
+                                'name' => $links->item(0)->nodeValue,
+                                'tournament_id' => $tournament->id,
+                            ]);
+                            $team->save();
+                        }
+                    }
 				}
 			}
 		}

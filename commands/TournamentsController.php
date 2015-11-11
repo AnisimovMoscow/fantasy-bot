@@ -55,13 +55,21 @@ class TournamentsController extends Controller
 										$year++;
 										$time = mktime($deadline[2], $deadline[3], 0, $month[$deadline[1]], $deadline[0], $year);
 									}
-									$tournament->deadline = date('Y-m-d H:i:s', $time);
-									$tournament->save();									
+                                    $deadline = date('Y-m-d H:i:s', $time);
 								}
-							}
+							} elseif ($tr->getElementsByTagName('th')->item(0)->nodeValue == 'Трансферы в туре') {
+                                $transfers = $tr->getElementsByTagName('td')->item(0)->nodeValue;
+                            }
 						}
 					}
 				}
+                
+                if ($tournament->deadline != $deadline) {
+                    $tournament->deadline = $deadline;
+                    $tournament->checked = false;
+                    $tournament->transfers = $transfers;
+                    $tournament->save();
+                }
 			}
 		}
     }
@@ -73,9 +81,8 @@ class TournamentsController extends Controller
 		
 		$users = User::find()->all();
 		foreach ($users as $user) {
-			$teams = Team::findAll(['user_id' => $user->id]);
 			$deadlines = [];
-			foreach ($teams as $team) {
+			foreach ($user->teams as $team) {
 				$deadline = strtotime($team->tournament->deadline);
 				if ($deadline > $start && $deadline < $end) {
 					$deadlines[$team->tournament->name] = $team->tournament->deadline;
@@ -93,4 +100,27 @@ class TournamentsController extends Controller
 			}
 		}
 	}
+    
+    public function actionCheck() {
+        $bot = new BotApi(Yii::$app->params['token']);
+        $time = time() + 2*60*60;
+        
+        $tournaments = Tournament::find()
+            ->where(['checked' => false])
+            ->andWhere(['<', 'deadline', date('Y-m-d H:i:s', $time)])
+            ->all();
+        foreach ($tournaments as $tournament) {
+            foreach ($tournament->teams as $team) {
+                $transfers = $team->getTransfers();
+                if ($transfers == $tournament->transfers) {
+                    $message = 'Ты ещё не сделал замены, скоро дедлайн:';
+                    $date = new DateTime($tournament->deadline, new DateTimeZone(Yii::$app->timeZone));
+					$message .= "\n".$date->format('H:i').'  '.$tournament->name;
+                    $bot->sendMessage($team->user->chat_id, $message);
+                }
+            }
+            $tournament->checked = true;
+            $tournament->save();
+        }
+    }
 }

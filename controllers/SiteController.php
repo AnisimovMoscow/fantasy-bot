@@ -5,7 +5,6 @@ use Yii;
 use yii\web\Controller;
 use TelegramBot\Api\BotApi;
 use app\models\User;
-use app\models\Team;
 use DateTime;
 use DateTimeZone;
 
@@ -78,11 +77,10 @@ class SiteController extends Controller
 		if ($user === null) {
 			$message = 'Кажется мы ещё не здоровались. Отправь мне /start';
 		} else {
-			$teams = Team::findAll(['user_id' => $user->id]);
-			if (count($teams) > 0) {
+			if (count($user->teams) > 0) {
 				$message = 'Дедлайны:';
 				$deadlines = [];
-				foreach ($teams as $team) {
+				foreach ($user->teams as $team) {
 					$deadlines[$team->tournament->name] = $team->tournament->deadline;
 				}
 				asort($deadlines);
@@ -104,10 +102,9 @@ class SiteController extends Controller
 		if ($user === null) {
 			$message = 'Кажется мы ещё не здоровались. Отправь мне /start';
 		} else {
-			$teams = Team::findAll(['user_id' => $user->id]);
-			if (count($teams) > 0) {
+			if (count($user->teams) > 0) {
 				$message = 'Твои команды:';
-				foreach ($teams as $team) {
+				foreach ($user->teams as $team) {
 					$message .= "\n- ".$team->name.' ('.$team->tournament->name.')';
 				}
 			} else {
