@@ -11,8 +11,14 @@ use DOMDocument;
 use DateTime;
 use DateTimeZone;
 
+/**
+ * Команды для запуска по расписанию
+ */
 class TournamentsController extends Controller
 {
+    /**
+     * Обновление дедлайнов турнира
+     */
     public function actionDeadlines() {
         $tournaments = Tournament::find()->all();
         
@@ -74,6 +80,9 @@ class TournamentsController extends Controller
         }
     }
     
+    /**
+     * Отравка сообщения о сегодняшних дедлайнах
+     */
     public function actionToday() {
         $bot = new BotApi(Yii::$app->params['token']);
         $start = mktime(0, 0, 0, date('n'), date('j'), date('Y'));
@@ -101,6 +110,9 @@ class TournamentsController extends Controller
         }
     }
     
+    /**
+     * Проверка замен перед дедлайном
+     */
     public function actionCheck() {
         $bot = new BotApi(Yii::$app->params['token']);
         $time = time() + 2*60*60;

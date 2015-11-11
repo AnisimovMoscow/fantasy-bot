@@ -4,6 +4,9 @@ namespace app\models;
 use yii\db\ActiveRecord;
 use DOMDocument;
 
+/**
+ * Пользователи
+ */
 class User extends ActiveRecord
 {
     public function rules() {
@@ -16,6 +19,9 @@ class User extends ActiveRecord
         return $this->hasMany(Team::className(), ['user_id' => 'id']);
     }
     
+    /**
+     * Обновляет список команд пользователя
+     */
     public function updateTeams() {
         if (!empty($this->profile_url)) {
             $dom = new DOMDocument();
@@ -27,7 +33,7 @@ class User extends ActiveRecord
             foreach ($divs as $div) {
                 if ($div->getAttribute('class') == 'item user-league') {
                     $links  = $div->getElementsByTagName('a');
-                    
+
                     $tournamentUrl = $host.$links->item(1)->getAttribute('href');
                     if (preg_match('/.*\/fantasy\/football\/.*/', $tournamentUrl)) {
                         $tournament = Tournament::findOne(['url' => $tournamentUrl]);

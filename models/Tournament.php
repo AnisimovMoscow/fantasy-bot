@@ -3,6 +3,9 @@ namespace app\models;
 
 use yii\db\ActiveRecord;
 
+/**
+ * Турниры
+ */
 class Tournament extends ActiveRecord
 {
     public function rules() {

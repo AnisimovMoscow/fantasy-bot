@@ -4,6 +4,9 @@ namespace app\models;
 use yii\db\ActiveRecord;
 use DOMDocument;
 
+/**
+ * Команды
+ */
 class Team extends ActiveRecord
 {
     public function rules() {
@@ -20,6 +23,9 @@ class Team extends ActiveRecord
         return $this->hasOne(User::className(), ['id' => 'user_id']);
     }
     
+    /**
+     * Возвращает количество оставшихся трансферов
+     */
     public function getTransfers() {
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);

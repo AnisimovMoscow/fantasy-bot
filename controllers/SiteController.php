@@ -8,12 +8,18 @@ use app\models\User;
 use DateTime;
 use DateTimeZone;
 
+/**
+ * Обработка запросов
+ */
 class SiteController extends Controller
 {
+    /**
+     * Прием запросов от сервера Телеграм
+     */
     public function actionHook() {
         $update = Yii::$app->request->post();
         Yii::info(print_r($update, true));
-        
+
         if ($update['message']['chat']['type'] == 'private' && isset($update['message']['text'])) {
             $params = explode(' ', $update['message']['text']);
             $command = array_shift($params);
@@ -25,7 +31,10 @@ class SiteController extends Controller
             }
         }
     }
-    
+
+    /**
+     * Начало работы, регистрация пользователя
+     */
     public function commandStart($params, $chat) {
         $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
@@ -43,11 +52,14 @@ class SiteController extends Controller
         } else {
             $message = 'Привет! Если тебе нужна помощь, набери /help';
         }
-        
+
         $bot = new BotApi(Yii::$app->params['token']);
         $bot->sendMessage($chat['id'], $message);
     }
-    
+
+    /**
+     * Установка ссылки на профиль
+     */
     public function commandProfile($params, $chat) {
         if (count($params) == 1) {
             if (preg_match('/http:\/\/www\.sports\.ru\/profile\/\d+\//', $params[0])) {
@@ -66,11 +78,14 @@ class SiteController extends Controller
         } else {
             $message = 'Нужно просто написать /profile и через пробел ссылку на свой профиль';
         }
-        
+
         $bot = new BotApi(Yii::$app->params['token']);
         $bot->sendMessage($chat['id'], $message);
     }
-    
+
+    /**
+     * Список дедлайнов
+     */
     public function commandDeadlines($params, $chat) {
         $user = User::findOne(['chat_id' => $chat['id']]);
         $formatter = Yii::$app->formatter;
@@ -92,11 +107,14 @@ class SiteController extends Controller
                 $message = 'Ты не создал ещё ни одной команды или не отправил мне ссылку на свой профиль. Набери /profile [url]';
             }
         }
-        
+
         $bot = new BotApi(Yii::$app->params['token']);
         $bot->sendMessage($chat['id'], $message);
     }
-    
+
+    /**
+     * Список команд пользователя
+     */
     public function commandTeams($params, $chat) {
         $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
@@ -111,11 +129,14 @@ class SiteController extends Controller
                 $message = 'Ты не создал ещё ни одной команды или не отправил мне ссылку на свой профиль. Набери /profile [url]';
             }
         }
-        
+
         $bot = new BotApi(Yii::$app->params['token']);
         $bot->sendMessage($chat['id'], $message);
     }
-    
+
+    /**
+     * Помощь, список доступных команд
+     */
     public function commandHelp($params, $chat) {
         $message = 'Вот команды, которые я понимаю:'."\n";
         $message .= '/profile [url] - сообщить ссылку на свой профиль'."\n";
@@ -124,7 +145,10 @@ class SiteController extends Controller
         $bot = new BotApi(Yii::$app->params['token']);
         $bot->sendMessage($chat['id'], $message);
     }
-    
+
+    /**
+     * Неизвестная команда, ошибка
+     */
     public function unknownCommand($chat) {
         $bot = new BotApi(Yii::$app->params['token']);
         $bot->sendMessage($chat['id'], 'Я не понимаю тебя. Чтоб посмотреть список известных мне команд просто набери /help');
