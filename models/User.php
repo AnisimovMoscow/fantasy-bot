@@ -11,24 +11,24 @@ class User extends ActiveRecord
             [['chat_id', 'first_name', 'last_name', 'username', 'profile_url'], 'safe'],
         ];
     }
-	
+    
     public function getTeams() {
         return $this->hasMany(Team::className(), ['user_id' => 'id']);
     }
     
-	public function updateTeams() {
-		if (!empty($this->profile_url)) {
-			$dom = new DOMDocument();
-			libxml_use_internal_errors(true);
-			$dom->loadHTMLFile($this->profile_url.'fantasy/');
-			libxml_clear_errors();
-			$divs = $dom->getElementsByTagName('div');
-			$host = 'http://www.sports.ru';
-			foreach ($divs as $div) {
-				if ($div->getAttribute('class') == 'item user-league') {
-					$links  = $div->getElementsByTagName('a');
-					
-					$tournamentUrl = $host.$links->item(1)->getAttribute('href');
+    public function updateTeams() {
+        if (!empty($this->profile_url)) {
+            $dom = new DOMDocument();
+            libxml_use_internal_errors(true);
+            $dom->loadHTMLFile($this->profile_url.'fantasy/');
+            libxml_clear_errors();
+            $divs = $dom->getElementsByTagName('div');
+            $host = 'http://www.sports.ru';
+            foreach ($divs as $div) {
+                if ($div->getAttribute('class') == 'item user-league') {
+                    $links  = $div->getElementsByTagName('a');
+                    
+                    $tournamentUrl = $host.$links->item(1)->getAttribute('href');
                     if (preg_match('/.*\/fantasy\/football\/.*/', $tournamentUrl)) {
                         $tournament = Tournament::findOne(['url' => $tournamentUrl]);
                         if ($tournament === null) {
@@ -51,8 +51,8 @@ class User extends ActiveRecord
                             $team->save();
                         }
                     }
-				}
-			}
-		}
-	}
+                }
+            }
+        }
+    }
 }

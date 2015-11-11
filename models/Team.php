@@ -11,12 +11,12 @@ class Team extends ActiveRecord
             [['user_id', 'url', 'name', 'tournament_id'], 'safe'],
         ];
     }
-	
-	public function getTournament() {
+    
+    public function getTournament() {
         return $this->hasOne(Tournament::className(), ['id' => 'tournament_id']);
     }
-	
-	public function getUser() {
+    
+    public function getUser() {
         return $this->hasOne(User::className(), ['id' => 'user_id']);
     }
     

@@ -11,7 +11,7 @@ return [
             'enableCsrfValidation' => false,
             'enableCookieValidation' => false,
             'parsers' => [
-        	'application/json' => 'yii\web\JsonParser'
+            'application/json' => 'yii\web\JsonParser'
             ],
         ],
         'urlManager' => [
@@ -25,7 +25,7 @@ return [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
                 ],
-				[
+                [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['info'],
                     'logFile' => '@runtime/logs/info.log',
@@ -33,7 +33,7 @@ return [
                 ],
             ],
         ],
-		'db' => require(__DIR__ . '/db.php'),
+        'db' => require(__DIR__ . '/db.php'),
     ],
-	'params' => require(__DIR__ . '/params.php'),
+    'params' => require(__DIR__ . '/params.php'),
 ];
