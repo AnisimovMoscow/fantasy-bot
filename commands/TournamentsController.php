@@ -10,6 +10,7 @@ use app\models\User;
 use DOMDocument;
 use DateTime;
 use DateTimeZone;
+use Exception;
 
 /**
  * Команды для запуска по расписанию
@@ -42,7 +43,9 @@ class TournamentsController extends Controller
             if ($team !== null) {
                 $dom = new DOMDocument();
                 libxml_use_internal_errors(true);
-                $dom->loadHTMLFile($team->url);
+                try {
+                    $dom->loadHTMLFile($team->url);
+                } catch (Exception $e) { }
                 libxml_clear_errors();
                 $tables = $dom->getElementsByTagName('table');
                 foreach ($tables as $table) {
@@ -105,7 +108,12 @@ class TournamentsController extends Controller
                     $date = new DateTime($deadline, new DateTimeZone(Yii::$app->timeZone));
                     $message .= "\n".$date->format('H:i').'  '.$name;
                 }
-                $bot->sendMessage($user->chat_id, $message);
+                
+                try {
+                    $bot->sendMessage($user->chat_id, $message);
+                } catch (Exception $e) {
+                    Yii::info(print_r($e, true), 'send');
+                }
             }
         }
     }
@@ -128,7 +136,12 @@ class TournamentsController extends Controller
                     $message = 'Ты ещё не сделал замены, скоро дедлайн:';
                     $date = new DateTime($tournament->deadline, new DateTimeZone(Yii::$app->timeZone));
                     $message .= "\n".$date->format('H:i').'  '.$tournament->name;
-                    $bot->sendMessage($team->user->chat_id, $message);
+                    
+                    try {
+                        $bot->sendMessage($team->user->chat_id, $message);
+                    } catch (Exception $e) {
+                        Yii::info(print_r($e, true), 'send');
+                    }
                 }
             }
             $tournament->checked = true;

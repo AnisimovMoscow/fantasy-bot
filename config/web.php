@@ -28,7 +28,15 @@ return [
                 [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['info'],
-                    'logFile' => '@runtime/logs/info.log',
+                    'categories' => ['hook'],
+                    'logFile' => '@runtime/logs/hook.log',
+                    'logVars' => [],
+                ],
+                [
+                    'class' => 'yii\log\FileTarget',
+                    'levels' => ['info'],
+                    'categories' => ['send'],
+                    'logFile' => '@runtime/logs/send.log',
                     'logVars' => [],
                 ],
             ],

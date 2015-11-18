@@ -3,6 +3,7 @@ namespace app\models;
 
 use yii\db\ActiveRecord;
 use DOMDocument;
+use Exception;
 
 /**
  * Пользователи
@@ -26,7 +27,9 @@ class User extends ActiveRecord
         if (!empty($this->profile_url)) {
             $dom = new DOMDocument();
             libxml_use_internal_errors(true);
-            $dom->loadHTMLFile($this->profile_url.'fantasy/');
+            try {
+                $dom->loadHTMLFile($this->profile_url.'fantasy/');
+            } catch (Exception $e) { }
             libxml_clear_errors();
             $divs = $dom->getElementsByTagName('div');
             $host = 'http://www.sports.ru';

@@ -7,6 +7,7 @@ use TelegramBot\Api\BotApi;
 use app\models\User;
 use DateTime;
 use DateTimeZone;
+use Exception;
 
 /**
  * Обработка запросов
@@ -18,7 +19,7 @@ class SiteController extends Controller
      */
     public function actionHook() {
         $update = Yii::$app->request->post();
-        Yii::info(print_r($update, true));
+        Yii::info(print_r($update, true), 'hook');
 
         if ($update['message']['chat']['type'] == 'private' && isset($update['message']['text'])) {
             $params = explode(' ', $update['message']['text']);
@@ -52,9 +53,8 @@ class SiteController extends Controller
         } else {
             $message = 'Привет! Если тебе нужна помощь, набери /help';
         }
-
-        $bot = new BotApi(Yii::$app->params['token']);
-        $bot->sendMessage($chat['id'], $message);
+        
+        $this->send($chat['id'], $message);
     }
 
     /**
@@ -62,15 +62,20 @@ class SiteController extends Controller
      */
     public function commandProfile($params, $chat) {
         if (count($params) == 1) {
-            if (preg_match('/http:\/\/www\.sports\.ru\/profile\/\d+\//', $params[0])) {
+            if (preg_match('/^http:\/\/www\.sports\.ru\/profile\/\d+\/$/', $params[0])) {
                 $user = User::findOne(['chat_id' => $chat['id']]);
                 if ($user === null) {
                     $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
                 } else {
-                    $user->profile_url = $params[0];
-                    $user->save();
-                    $user->updateTeams();
-                    $message = 'Всё отлично. Молодец! Я запомнил ссылку на твой профиль. Чтоб посмотреть список команд, отправь мне /teams';
+                    $checkUser = User::findOne(['profile_url' => $params[0]]);
+                    if ($checkUser !== null && $checkUser->id !== $user->id) {
+                        $message = 'Пользователь с такой ссылкой уже зарегистрирован.';
+                    } else {
+                        $user->profile_url = $params[0];
+                        $user->save();
+                        $user->updateTeams();
+                        $message = 'Всё отлично. Молодец! Я запомнил ссылку на твой профиль. Чтоб посмотреть список команд, отправь мне /teams';
+                    }
                 }
             } else {
                 $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт sports.ru и скопируй ссылку на свою страницу. Там должны быть ссылка вида http://www.sports.ru/profile/12345/';
@@ -78,9 +83,8 @@ class SiteController extends Controller
         } else {
             $message = 'Нужно просто написать /profile и через пробел ссылку на свой профиль';
         }
-
-        $bot = new BotApi(Yii::$app->params['token']);
-        $bot->sendMessage($chat['id'], $message);
+        
+        $this->send($chat['id'], $message);
     }
 
     /**
@@ -108,8 +112,7 @@ class SiteController extends Controller
             }
         }
 
-        $bot = new BotApi(Yii::$app->params['token']);
-        $bot->sendMessage($chat['id'], $message);
+        $this->send($chat['id'], $message);
     }
 
     /**
@@ -130,8 +133,7 @@ class SiteController extends Controller
             }
         }
 
-        $bot = new BotApi(Yii::$app->params['token']);
-        $bot->sendMessage($chat['id'], $message);
+        $this->send($chat['id'], $message);
     }
 
     /**
@@ -139,18 +141,29 @@ class SiteController extends Controller
      */
     public function commandHelp($params, $chat) {
         $message = 'Вот команды, которые я понимаю:'."\n";
-        $message .= '/profile [url] - сообщить ссылку на свой профиль'."\n";
+        $message .= '/profile url - сообщить ссылку на свой профиль'."\n";
         $message .= '/deadlines - дедлайны турниров'."\n";
         $message .= '/teams - список твоих фентези-команд';
-        $bot = new BotApi(Yii::$app->params['token']);
-        $bot->sendMessage($chat['id'], $message);
+        
+        $this->send($chat['id'], $message);
     }
 
     /**
      * Неизвестная команда, ошибка
      */
     public function unknownCommand($chat) {
+        $this->send($chat['id'], 'Я не понимаю тебя. Чтоб посмотреть список известных мне команд просто набери /help');
+    }
+    
+    /**
+     * Отправляет сообщение
+     */
+    public function send($chatId, $message) {
         $bot = new BotApi(Yii::$app->params['token']);
-        $bot->sendMessage($chat['id'], 'Я не понимаю тебя. Чтоб посмотреть список известных мне команд просто набери /help');
+        try {
+            $bot->sendMessage($chatId, $message);
+        } catch (Exception $e) {
+            Yii::info(print_r($e, true), 'send');
+        }
     }
 }
