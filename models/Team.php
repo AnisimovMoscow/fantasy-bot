@@ -2,7 +2,7 @@
 namespace app\models;
 
 use yii\db\ActiveRecord;
-use DOMDocument;
+use app\components\Html;
 
 /**
  * Команды
@@ -27,10 +27,7 @@ class Team extends ActiveRecord
      * Возвращает количество оставшихся трансферов
      */
     public function getTransfers() {
-        $dom = new DOMDocument();
-        libxml_use_internal_errors(true);
-        $dom->loadHTMLFile($this->url);
-        libxml_clear_errors();
+        $dom = Html::load($this->url);
         $tables = $dom->getElementsByTagName('table');
         foreach ($tables as $table) {
             if ($table->getAttribute('class') == 'profile-table') {

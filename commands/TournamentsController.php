@@ -7,7 +7,7 @@ use TelegramBot\Api\BotApi;
 use app\models\Tournament;
 use app\models\Team;
 use app\models\User;
-use DOMDocument;
+use app\components\Html;
 use DateTime;
 use DateTimeZone;
 use Exception;
@@ -41,12 +41,7 @@ class TournamentsController extends Controller
         foreach ($tournaments as $tournament) {
             $team = Team::findOne(['tournament_id' => $tournament->id]);
             if ($team !== null) {
-                $dom = new DOMDocument();
-                libxml_use_internal_errors(true);
-                try {
-                    $dom->loadHTMLFile($team->url);
-                } catch (Exception $e) { }
-                libxml_clear_errors();
+                $dom = Html::load($team->url);
                 $tables = $dom->getElementsByTagName('table');
                 foreach ($tables as $table) {
                     if ($table->getAttribute('class') == 'profile-table') {

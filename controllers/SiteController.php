@@ -14,6 +14,10 @@ use Exception;
  */
 class SiteController extends Controller
 {
+    public function actionIndex() {
+        return '';
+    }
+    
     /**
      * Прием запросов от сервера Телеграм
      */

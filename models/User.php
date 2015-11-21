@@ -2,8 +2,7 @@
 namespace app\models;
 
 use yii\db\ActiveRecord;
-use DOMDocument;
-use Exception;
+use app\components\Html;
 
 /**
  * Пользователи
@@ -25,12 +24,7 @@ class User extends ActiveRecord
      */
     public function updateTeams() {
         if (!empty($this->profile_url)) {
-            $dom = new DOMDocument();
-            libxml_use_internal_errors(true);
-            try {
-                $dom->loadHTMLFile($this->profile_url.'fantasy/');
-            } catch (Exception $e) { }
-            libxml_clear_errors();
+            $dom = Html::load($this->profile_url.'fantasy/');
             $divs = $dom->getElementsByTagName('div');
             $host = 'http://www.sports.ru';
             foreach ($divs as $div) {
@@ -49,6 +43,7 @@ class User extends ActiveRecord
                         }
 
                         $teamUrl = $host.$links->item(0)->getAttribute('href');
+                        $teamUrl = str_replace('/football/team/', '/football/team/points/', $teamUrl);
                         $team = Team::findOne(['url' => $teamUrl]);
                         if ($team === null) {
                             $team = new Team([
