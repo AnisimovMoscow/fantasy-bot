@@ -3,7 +3,7 @@
     "require": {
         "php": ">=5.4.0",
         "yiisoft/yii2": "*",
-        "telegram-bot/api": "^2.1"
+        "telegram-bot/api": "2.*"
     },
     "extra": {
         "asset-installer-paths": {
