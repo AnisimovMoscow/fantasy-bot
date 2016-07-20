@@ -24,15 +24,23 @@ class User extends ActiveRecord
      */
     public function updateTeams() {
         if (!empty($this->profile_url)) {
+            // Запоминаем старые команды
+            $oldTeams = [];
+            foreach ($this->teams as $team) {
+                $oldTeams[] = $team->url;
+            }
+            
+            // Получаем список новых команд
             $dom = Html::load($this->profile_url.'fantasy/');
             $divs = $dom->getElementsByTagName('div');
             $host = 'http://www.sports.ru';
             foreach ($divs as $div) {
                 if ($div->getAttribute('class') == 'item user-league') {
                     $links  = $div->getElementsByTagName('a');
-
+                    
                     $tournamentUrl = $host.$links->item(1)->getAttribute('href');
                     if (preg_match('/.*\/fantasy\/football\/.*/', $tournamentUrl)) {
+                        // Проверяем турнир к которому относится команда
                         $tournament = Tournament::findOne(['url' => $tournamentUrl]);
                         if ($tournament === null) {
                             $tournament = new Tournament([
@@ -41,7 +49,8 @@ class User extends ActiveRecord
                             ]);
                             $tournament->save();
                         }
-
+                        
+                        // Добавляем команду
                         $teamUrl = $host.$links->item(0)->getAttribute('href');
                         $teamUrl = str_replace('/football/team/', '/football/team/points/', $teamUrl);
                         $team = Team::findOne(['url' => $teamUrl]);
@@ -53,8 +62,19 @@ class User extends ActiveRecord
                                 'tournament_id' => $tournament->id,
                             ]);
                             $team->save();
+                        } else {
+                            $index = array_search($teamUrl, $oldTeams);
+                            array_splice($oldTeams, $index, 1);
                         }
                     }
+                }
+            }
+            
+            // Удаляем старые команды
+            foreach ($oldTeams as $url) {
+                $team = Team::findOne(['url' => $url]);
+                if ($team !== null) {
+                    $team->delete();
                 }
             }
         }

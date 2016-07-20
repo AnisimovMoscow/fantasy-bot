@@ -30,4 +30,14 @@ class UsersController extends Controller
             echo $message."\n";
         }
     }
+    
+    /**
+     * Обновляет список команд у всех пользователей
+     */
+    public function actionUpdateAll() {
+        $users = User::find()->where(['!=', 'profile_url', ''])->all();
+        foreach ($users as $user) {
+            $user->updateTeams();
+        }
+    }
 }
