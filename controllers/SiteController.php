@@ -49,11 +49,16 @@ class SiteController extends Controller
                 'last_name' => isset($chat['last_name'])? $chat['last_name'] : '',
                 'username' => isset($chat['username'])? $chat['username'] : '',
                 'profile_url' => '',
+                'notification' => true,
             ]);
             $user->save();
             $message = 'Привет! Отправь мне ссылку на свой профиль и я буду напоминать тебе о важных событиях - /profile [url]';
         } elseif (empty($user->profile_url)) {
             $message = 'Ты ещё не отправил мне ссылку на свой профиль, набери /profile [url]';
+        } elseif (!$user->notification) {
+            $user->notification = true;
+            $user->save();
+            $message = 'Ты подписался на уведомления. Если захочешь отписаться, набери /stop';
         } else {
             $message = 'Привет! Если тебе нужна помощь, набери /help';
         }
@@ -139,7 +144,25 @@ class SiteController extends Controller
 
         $this->send($chat['id'], $message);
     }
-
+    
+    /**
+     * Отписка от уведомлений
+     */
+    public function commandStop($params, $chat) {
+        $user = User::findOne(['chat_id' => $chat['id']]);
+        if ($user === null) {
+            $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
+        } elseif ($user->notification) {
+            $user->notification = false;
+            $user->save();
+            $message = 'Ты отписался от напоминаний. Если передумал, набери /start';
+        } else {
+            $message = 'Ты уже отписан от напоминаний. Если хочет снова подписаться, набери /start';
+        }
+        
+        $this->send($chat['id'], $message);
+    }
+    
     /**
      * Помощь, список доступных команд
      */
@@ -147,7 +170,8 @@ class SiteController extends Controller
         $message = 'Вот команды, которые я понимаю:'."\n";
         $message .= '/profile url - сообщить ссылку на свой профиль'."\n";
         $message .= '/deadlines - дедлайны турниров'."\n";
-        $message .= '/teams - список твоих фентези-команд';
+        $message .= '/teams - список твоих фентези-команд'."\n";
+        $message .= '/stop - отписаться от уведомлений';
         
         $this->send($chat['id'], $message);
     }

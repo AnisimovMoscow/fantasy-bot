@@ -86,7 +86,7 @@ class TournamentsController extends Controller
         $start = mktime(0, 0, 0, date('n'), date('j'), date('Y'));
         $end = mktime(0, 0, 0, date('n'), date('j')+1, date('Y'));
         
-        $users = User::find()->all();
+        $users = User::findAll(['notification' => true]);
         foreach ($users as $user) {
             $deadlines = [];
             foreach ($user->teams as $team) {
@@ -126,16 +126,18 @@ class TournamentsController extends Controller
             ->all();
         foreach ($tournaments as $tournament) {
             foreach ($tournament->teams as $team) {
-                $transfers = $team->getTransfers();
-                if ($transfers == $tournament->transfers) {
-                    $message = 'Ты ещё не сделал замены, скоро дедлайн:';
-                    $date = new DateTime($tournament->deadline, new DateTimeZone(Yii::$app->timeZone));
-                    $message .= "\n".$date->format('H:i').'  '.$tournament->name;
-                    
-                    try {
-                        $bot->sendMessage($team->user->chat_id, $message);
-                    } catch (Exception $e) {
-                        Yii::info(print_r($e, true), 'send');
+                if ($team->user->notification) {
+                    $transfers = $team->getTransfers();
+                    if ($transfers == $tournament->transfers) {
+                        $message = 'Ты ещё не сделал замены, скоро дедлайн:';
+                        $date = new DateTime($tournament->deadline, new DateTimeZone(Yii::$app->timeZone));
+                        $message .= "\n".$date->format('H:i').'  '.$tournament->name;
+
+                        try {
+                            $bot->sendMessage($team->user->chat_id, $message);
+                        } catch (Exception $e) {
+                            Yii::info(print_r($e, true), 'send');
+                        }
                     }
                 }
             }
