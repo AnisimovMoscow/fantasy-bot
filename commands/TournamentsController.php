@@ -70,8 +70,12 @@ class TournamentsController extends Controller
                 
                 if ($tournament->deadline != $deadline) {
                     $tournament->deadline = $deadline;
-                    $tournament->checked = false;
-                    $tournament->transfers = $transfers;
+                    if (isset($transfers)) {
+                        $tournament->checked = false;
+                        $tournament->transfers = $transfers;
+                    } else {
+                        $tournament->checked = true;
+                    }
                     $tournament->save();
                 }
             }
