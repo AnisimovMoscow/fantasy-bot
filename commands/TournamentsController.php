@@ -87,8 +87,8 @@ class TournamentsController extends Controller
      */
     public function actionToday() {
         $bot = new BotApi(Yii::$app->params['token']);
-        $start = mktime(0, 0, 0, date('n'), date('j'), date('Y'));
-        $end = mktime(0, 0, 0, date('n'), date('j')+1, date('Y'));
+        $start = time();
+        $end = strtotime('+1 day');
         
         $users = User::findAll(['notification' => true]);
         foreach ($users as $user) {
