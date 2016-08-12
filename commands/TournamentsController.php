@@ -111,7 +111,7 @@ class TournamentsController extends Controller
                 try {
                     $bot->sendMessage($user->chat_id, $message);
                 } catch (Exception $e) {
-                    Yii::info(print_r($e, true), 'send');
+                    Yii::info($e->getMessage(), 'send');
                 }
             }
         }
@@ -140,7 +140,7 @@ class TournamentsController extends Controller
                         try {
                             $bot->sendMessage($team->user->chat_id, $message);
                         } catch (Exception $e) {
-                            Yii::info(print_r($e, true), 'send');
+                            Yii::info($e->getMessage(), 'send');
                         }
                     }
                 }
