@@ -114,7 +114,7 @@ class SiteController extends Controller
                 asort($deadlines);
                 foreach ($deadlines as $name => $deadline) {
                     $date = new DateTime($deadline, new DateTimeZone(Yii::$app->timeZone));
-                    $message .= "\n- ".$name.': '.$formatter->asDatetime($date, 'd LLLL (E) HH:mm');
+                    $message .= "\n- ".$name.': '.$this->formatDate($date);
                 }
             } else {
                 $message = 'Ты не создал ещё ни одной команды или не отправил мне ссылку на свой профиль. Набери /profile [url]';
@@ -123,6 +123,45 @@ class SiteController extends Controller
 
         $this->send($chat['id'], $message);
     }
+    
+    /**
+     * Форматирует вывод даты
+     */
+    private function formatDate($date) {
+        $result = $date->format('j').' ';
+        
+        $months = [
+            1 => 'января',
+            'февраля',
+            'март',
+            'апреля',
+            'мая',
+            'июня',
+            'июля',
+            'августа',
+            'сентября',
+            'октября',
+            'ноября',
+            'декабря',
+        ];
+        $result .= $months[$date->format('n')].' (';
+        
+        $days = [
+            1 => 'пн',
+            'вт',
+            'ср',
+            'чт',
+            'пт',
+            'сб',
+            'вс',
+        ];
+        $result .= $days[$date->format('N')].') ';
+        
+        $result .= $date->format('H:i');
+        
+        return $result;
+    }
+
 
     /**
      * Список команд пользователя
