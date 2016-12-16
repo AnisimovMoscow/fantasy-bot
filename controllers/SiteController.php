@@ -77,7 +77,7 @@ class SiteController extends Controller
      */
     public function commandProfile($params, $chat) {
         if (count($params) == 1) {
-            if (preg_match('/^http:\/\/www\.sports\.ru\/profile\/\d+\/$/', $params[0])) {
+            if (preg_match('/^https:\/\/www\.sports\.ru\/profile\/\d+\/$/', $params[0])) {
                 $user = User::findOne(['chat_id' => $chat['id']]);
                 if ($user === null) {
                     $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
@@ -93,7 +93,7 @@ class SiteController extends Controller
                     }
                 }
             } else {
-                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт sports.ru и скопируй ссылку на свою страницу. Там должны быть ссылка вида http://www.sports.ru/profile/12345/';
+                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт sports.ru и скопируй ссылку на свою страницу. Там должны быть ссылка вида https://www.sports.ru/profile/12345/';
             }
         } else {
             $message = 'Нужно просто написать /profile и через пробел ссылку на свой профиль';

@@ -20,7 +20,7 @@ class ChannelsController extends Controller
     public function actionCskanews() {
         $cska = Yii::$app->params['cska'];
         $bot = new BotApi($cska['token']);
-        $host = 'http://www.sports.ru';
+        $host = 'https://www.sports.ru';
         
         $dom = Html::load($cska['html']);
         $divs = $dom->getElementsByTagName('div');

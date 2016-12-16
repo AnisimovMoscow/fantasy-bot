@@ -33,7 +33,7 @@ class User extends ActiveRecord
             // Получаем список новых команд
             $dom = Html::load($this->profile_url.'fantasy/');
             $divs = $dom->getElementsByTagName('div');
-            $host = 'http://www.sports.ru';
+            $host = 'https://www.sports.ru';
             foreach ($divs as $div) {
                 if ($div->getAttribute('class') == 'item user-league') {
                     $links  = $div->getElementsByTagName('a');
