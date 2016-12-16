@@ -24,15 +24,21 @@ class SiteController extends Controller
     public function actionHook() {
         $update = Yii::$app->request->post();
         Yii::info(print_r($update, true), 'hook');
-
-        if ($update['message']['chat']['type'] == 'private' && isset($update['message']['text'])) {
-            $params = explode(' ', $update['message']['text']);
+        
+        if (isset($update['message'])) {
+            $message = $update['message'];
+        } elseif (isset($update['edited_message'])) {
+            $message = $update['edited_message'];
+        }
+        
+        if ($message['chat']['type'] == 'private' && isset($message['text'])) {
+            $params = explode(' ', $message['text']);
             $command = array_shift($params);
             $method = 'command'.ucfirst(ltrim($command, '/'));
             if (method_exists($this, $method) && is_callable([$this, $method])) {
-                $this->$method($params, $update['message']['chat']);
+                $this->$method($params, $message['chat']);
             } else {
-                $this->unknownCommand($update['message']['chat']);
+                $this->unknownCommand($message['chat']);
             }
         }
     }
