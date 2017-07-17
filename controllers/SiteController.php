@@ -63,7 +63,7 @@ class SiteController extends Controller
      */
     public function commandStart($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id']]);
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
         if ($user === null) {
             $user = new User([
                 'chat_id' => $chat['id'],
@@ -72,6 +72,7 @@ class SiteController extends Controller
                 'username' => isset($chat['username'])? $chat['username'] : '',
                 'profile_url' => '',
                 'notification' => true,
+                'site' => $this->host['id'],
             ]);
             $user->save();
             $message = 'Привет! Отправь мне ссылку на свой профиль и я буду напоминать тебе о важных событиях';
@@ -94,8 +95,8 @@ class SiteController extends Controller
     public function commandProfile($params, $chat)
     {
         if (count($params) == 1) {
-            if (preg_match('/^https:\/\/'.$this->host.'\/profile\/\d+[\/]$/', $params[0])) {
-                $user = User::findOne(['chat_id' => $chat['id']]);
+            if (preg_match('/^https:\/\/'.$this->host['regexp'].'\/profile\/\d+[\/]$/', $params[0])) {
+                $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
                 if ($user === null) {
                     $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
                 } else {
@@ -124,7 +125,7 @@ class SiteController extends Controller
      */
     public function commandDeadlines($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id']]);
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
         $formatter = Yii::$app->formatter;
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
@@ -192,7 +193,7 @@ class SiteController extends Controller
      */
     public function commandTeams($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id']]);
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
         } else {
@@ -214,7 +215,7 @@ class SiteController extends Controller
      */
     public function commandStop($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id']]);
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
         } elseif ($user->notification) {
