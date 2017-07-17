@@ -16,8 +16,6 @@ use Exception;
 class SiteController extends Controller
 {
     private $host;
-    private $site;
-    private $id;
     
     public function actionIndex()
     {
@@ -33,12 +31,18 @@ class SiteController extends Controller
         Yii::info(print_r($update, true), 'hook');
         
         $hosts = [
-            'ru' => 'www\.sports\.ru',
-            'ua' => 'ua\.tribuna\.com',
+            'ru' => [
+                'regexp' => 'www\.sports\.ru',
+                'url' => 'www.sports.ru',
+                'id' => 'ru',
+            ],
+            'ua' => [
+                'regexp' => 'ua\.tribuna\.com',
+                'url' => 'ua.tribuna.com',
+                'id' => 'ua',
+            ],
         ];
         $this->host = $hosts[$site];
-        $this->site = str_replace('\.', '.', $this->host);
-        $this->id = $site;
         
         if (isset($update['message']['text']) && $update['message']['chat']['type'] == 'private') {
             $params = explode(' ', $update['message']['text']);
@@ -46,7 +50,7 @@ class SiteController extends Controller
             $method = 'command'.ucfirst(ltrim($command, '/'));
             if (method_exists($this, $method) && is_callable([$this, $method])) {
                 $this->$method($params, $update['message']['chat']);
-            } elseif (preg_match('/https:\/\/'.$this->host.'\/profile\/\d+[\/]$/', $command)) {
+            } elseif (preg_match('/https:\/\/'.$this->host['regexp'].'\/profile\/\d+[\/]$/', $command)) {
                 $this->commandProfile([$command], $update['message']['chat']);
             } else {
                 $this->unknownCommand($update['message']['chat']);
@@ -106,7 +110,7 @@ class SiteController extends Controller
                     }
                 }
             } else {
-                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт '.$this->site.' и скопируй ссылку на свою страницу. Там должны быть ссылка вида https://'.$this->site.'/profile/12345/';
+                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт '.$this->host['url'].' и скопируй ссылку на свою страницу. Там должны быть ссылка вида https://'.$this->host['url'].'/profile/12345/';
             }
         } else {
             $message = 'Нужно просто отправить ссылку на свой профиль';
@@ -251,7 +255,7 @@ class SiteController extends Controller
      */
     public function send($chatId, $message)
     {
-        $bot = new BotApi(Yii::$app->params['token'][$this->id]);
+        $bot = new BotApi(Yii::$app->params['token'][$this->host['id']]);
         try {
             $bot->sendMessage($chatId, $message);
         } catch (Exception $e) {
