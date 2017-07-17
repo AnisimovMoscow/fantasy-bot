@@ -31,13 +31,12 @@ class SiteController extends Controller
             $method = 'command'.ucfirst(ltrim($command, '/'));
             if (method_exists($this, $method) && is_callable([$this, $method])) {
                 $this->$method($params, $update['message']['chat']);
+            } elseif (preg_match('/https:\/\/www\.sports\.ru\/fantasy\/football\/team[\/points]*\/(\d+)\.html/', $command, $id)) {
+                $this->commandTeam($id[1], $update['message']['chat']);
+            } elseif (preg_match('/https:\/\/www\.sports\.ru\/profile\/\d+[\/]$/', $command)) {
+                $this->commandProfile([$command], $update['message']['chat']);
             } else {
-                preg_match('/https:\/\/www\.sports\.ru\/fantasy\/football\/team[\/points]*\/(\d+)\.html/', $command, $id);
-                if (empty($id[1]) || !is_numeric($id[1])) {
-                    $this->unknownCommand($update['message']['chat']);
-                } else {
-                    $this->commandTeam($id[1], $update['message']['chat']);
-                }
+                $this->unknownCommand($update['message']['chat']);
             }
         }
     }
@@ -57,9 +56,9 @@ class SiteController extends Controller
                 'notification' => true,
             ]);
             $user->save();
-            $message = 'Привет! Отправь мне ссылку на свой профиль и я буду напоминать тебе о важных событиях - /profile [url]';
+            $message = 'Привет! Отправь мне ссылку на свой профиль и я буду напоминать тебе о важных событиях';
         } elseif (empty($user->profile_url)) {
-            $message = 'Ты ещё не отправил мне ссылку на свой профиль, набери /profile [url]';
+            $message = 'Ты ещё не отправил мне ссылку на свой профиль';
         } elseif (!$user->notification) {
             $user->notification = true;
             $user->save();
@@ -76,7 +75,7 @@ class SiteController extends Controller
      */
     public function commandProfile($params, $chat) {
         if (count($params) == 1) {
-            if (preg_match('/^http:\/\/www\.sports\.ru\/profile\/\d+\/$/', $params[0])) {
+            if (preg_match('/^https:\/\/www\.sports\.ru\/profile\/\d+[\/]$/', $params[0])) {
                 $user = User::findOne(['chat_id' => $chat['id']]);
                 if ($user === null) {
                     $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
@@ -92,10 +91,10 @@ class SiteController extends Controller
                     }
                 }
             } else {
-                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт sports.ru и скопируй ссылку на свою страницу. Там должны быть ссылка вида http://www.sports.ru/profile/12345/';
+                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт sports.ru и скопируй ссылку на свою страницу. Там должны быть ссылка вида https://www.sports.ru/profile/12345/';
             }
         } else {
-            $message = 'Нужно просто написать /profile и через пробел ссылку на свой профиль';
+            $message = 'Нужно просто отправить ссылку на свой профиль';
         }
         
         $this->send($chat['id'], $message);
@@ -122,7 +121,7 @@ class SiteController extends Controller
                     $message .= "\n- ".$name.': '.$this->formatDate($date);
                 }
             } else {
-                $message = 'Ты не создал ещё ни одной команды или не отправил мне ссылку на свой профиль. Набери /profile [url]';
+                $message = 'Ты не создал ещё ни одной команды или не отправил мне ссылку на свой профиль';
             }
         }
 
@@ -182,7 +181,7 @@ class SiteController extends Controller
                     $message .= "\n- ".$team->name.' ('.$team->tournament->name.')';
                 }
             } else {
-                $message = 'Ты не создал ещё ни одной команды или не отправил мне ссылку на свой профиль. Набери /profile [url]';
+                $message = 'Ты не создал ещё ни одной команды или не отправил мне ссылку на свой профиль';
             }
         }
 
@@ -224,6 +223,8 @@ class SiteController extends Controller
      * Просмотр состава команды
      */
     public function commandTeam($id, $chat) {
+        $this->send($chat['id'], 'Эта функция больше недоступна.');
+        /*
         $json = file_get_contents('https://www.sports.ru/fantasy/football/team/json/'.$id.'.json');
         if ($json === false) {
             $message = 'Ошибка при загрузке данных.';
@@ -264,6 +265,7 @@ class SiteController extends Controller
         }
         
         $this->send($chat['id'], $message);
+         */
     }
     
     /**
