@@ -25,7 +25,7 @@ class SiteController extends Controller
         $update = Yii::$app->request->post();
         Yii::info(print_r($update, true), 'hook');
 
-        if ($update['message']['chat']['type'] == 'private' && isset($update['message']['text'])) {
+        if (isset($update['message']['text']) && $update['message']['chat']['type'] == 'private') {
             $params = explode(' ', $update['message']['text']);
             $command = array_shift($params);
             $method = 'command'.ucfirst(ltrim($command, '/'));
