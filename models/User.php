@@ -1,4 +1,5 @@
 <?php
+
 namespace app\models;
 
 use yii\db\ActiveRecord;
@@ -9,20 +10,23 @@ use app\components\Html;
  */
 class User extends ActiveRecord
 {
-    public function rules() {
+    public function rules()
+    {
         return [
             [['chat_id', 'first_name', 'last_name', 'username', 'profile_url'], 'safe'],
         ];
     }
     
-    public function getTeams() {
+    public function getTeams()
+    {
         return $this->hasMany(Team::className(), ['user_id' => 'id']);
     }
     
     /**
      * Обновляет список команд пользователя
      */
-    public function updateTeams() {
+    public function updateTeams()
+    {
         if (!empty($this->profile_url)) {
             // Запоминаем старые команды
             $oldTeams = [];
@@ -33,7 +37,8 @@ class User extends ActiveRecord
             // Получаем список новых команд
             $dom = Html::load($this->profile_url.'fantasy/');
             $divs = $dom->getElementsByTagName('div');
-            $host = 'https://www.sports.ru';
+            $url = parse_url($this->profile_url);
+            $host = $url['scheme'].'://'.$url['host'];
             foreach ($divs as $div) {
                 if ($div->getAttribute('class') == 'item user-league') {
                     $links  = $div->getElementsByTagName('a');

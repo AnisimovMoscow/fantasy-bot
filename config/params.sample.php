@@ -1,4 +1,7 @@
 <?php
 return [
-    'token' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
+    'token' => [
+        'ru' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
+        'ua' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
+    ],
 ];

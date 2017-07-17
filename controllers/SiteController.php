@@ -1,4 +1,5 @@
 <?php
+
 namespace app\controllers;
 
 use Yii;
@@ -14,26 +15,38 @@ use Exception;
  */
 class SiteController extends Controller
 {
-    public function actionIndex() {
+    private $host;
+    private $site;
+    private $id;
+    
+    public function actionIndex()
+    {
         return '';
     }
     
     /**
      * Прием запросов от сервера Телеграм
      */
-    public function actionHook() {
+    public function actionHook($site = 'ru')
+    {
         $update = Yii::$app->request->post();
         Yii::info(print_r($update, true), 'hook');
-
+        
+        $hosts = [
+            'ru' => 'www\.sports\.ru',
+            'ua' => 'ua\.tribuna\.com',
+        ];
+        $this->host = $hosts[$site];
+        $this->site = str_replace('\.', '.', $this->host);
+        $this->id = $site;
+        
         if (isset($update['message']['text']) && $update['message']['chat']['type'] == 'private') {
             $params = explode(' ', $update['message']['text']);
             $command = array_shift($params);
             $method = 'command'.ucfirst(ltrim($command, '/'));
             if (method_exists($this, $method) && is_callable([$this, $method])) {
                 $this->$method($params, $update['message']['chat']);
-            } elseif (preg_match('/https:\/\/www\.sports\.ru\/fantasy\/football\/team[\/points]*\/(\d+)\.html/', $command, $id)) {
-                $this->commandTeam($id[1], $update['message']['chat']);
-            } elseif (preg_match('/https:\/\/www\.sports\.ru\/profile\/\d+[\/]$/', $command)) {
+            } elseif (preg_match('/https:\/\/'.$this->host.'\/profile\/\d+[\/]$/', $command)) {
                 $this->commandProfile([$command], $update['message']['chat']);
             } else {
                 $this->unknownCommand($update['message']['chat']);
@@ -44,7 +57,8 @@ class SiteController extends Controller
     /**
      * Начало работы, регистрация пользователя
      */
-    public function commandStart($params, $chat) {
+    public function commandStart($params, $chat)
+    {
         $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
             $user = new User([
@@ -69,13 +83,14 @@ class SiteController extends Controller
         
         $this->send($chat['id'], $message);
     }
-
+    
     /**
      * Установка ссылки на профиль
      */
-    public function commandProfile($params, $chat) {
+    public function commandProfile($params, $chat)
+    {
         if (count($params) == 1) {
-            if (preg_match('/^https:\/\/www\.sports\.ru\/profile\/\d+[\/]$/', $params[0])) {
+            if (preg_match('/^https:\/\/'.$this->host.'\/profile\/\d+[\/]$/', $params[0])) {
                 $user = User::findOne(['chat_id' => $chat['id']]);
                 if ($user === null) {
                     $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
@@ -91,7 +106,7 @@ class SiteController extends Controller
                     }
                 }
             } else {
-                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт sports.ru и скопируй ссылку на свою страницу. Там должны быть ссылка вида https://www.sports.ru/profile/12345/';
+                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт '.$this->site.' и скопируй ссылку на свою страницу. Там должны быть ссылка вида https://'.$this->site.'/profile/12345/';
             }
         } else {
             $message = 'Нужно просто отправить ссылку на свой профиль';
@@ -99,11 +114,12 @@ class SiteController extends Controller
         
         $this->send($chat['id'], $message);
     }
-
+    
     /**
      * Список дедлайнов
      */
-    public function commandDeadlines($params, $chat) {
+    public function commandDeadlines($params, $chat)
+    {
         $user = User::findOne(['chat_id' => $chat['id']]);
         $formatter = Yii::$app->formatter;
         if ($user === null) {
@@ -131,7 +147,8 @@ class SiteController extends Controller
     /**
      * Форматирует вывод даты
      */
-    private function formatDate($date) {
+    private function formatDate($date)
+    {
         $result = $date->format('j').' ';
         
         $months = [
@@ -165,12 +182,12 @@ class SiteController extends Controller
         
         return $result;
     }
-
-
+    
     /**
      * Список команд пользователя
      */
-    public function commandTeams($params, $chat) {
+    public function commandTeams($params, $chat)
+    {
         $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
@@ -191,7 +208,8 @@ class SiteController extends Controller
     /**
      * Отписка от уведомлений
      */
-    public function commandStop($params, $chat) {
+    public function commandStop($params, $chat)
+    {
         $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
@@ -209,7 +227,8 @@ class SiteController extends Controller
     /**
      * Помощь, список доступных команд
      */
-    public function commandHelp($params, $chat) {
+    public function commandHelp($params, $chat)
+    {
         $message = 'Вот команды, которые я понимаю:'."\n";
         $message .= '/profile url - сообщить ссылку на свой профиль'."\n";
         $message .= '/deadlines - дедлайны турниров'."\n";
@@ -220,66 +239,19 @@ class SiteController extends Controller
     }
     
     /**
-     * Просмотр состава команды
-     */
-    public function commandTeam($id, $chat) {
-        $this->send($chat['id'], 'Эта функция больше недоступна.');
-        /*
-        $json = file_get_contents('https://www.sports.ru/fantasy/football/team/json/'.$id.'.json');
-        if ($json === false) {
-            $message = 'Ошибка при загрузке данных.';
-        } else {
-            $team = json_decode($json);
-            if (is_null($team)) {
-                $message = 'Ошибка при обработке данных.';
-            } else {
-                $ampluaName = [
-                    1 => 'вр',
-                    2 => 'защ',
-                    3 => 'пз',
-                    4 => 'нап',
-                ];
-                $message = 'Основа:'."\n";
-                foreach ($team->players as $player) {
-                    if ($player->row > 0) {
-                        $message .= $player->name.' (';
-                        $message .= $player->club.') ';
-                        if ($player->isCaptain == '1') {
-                            $message .= '[c] ';
-                        }
-                        $message .= '- '.$ampluaName[$player->amplua].', ';
-                        $message .= $player->price."\n";
-                    }
-                }
-                $message .= "\n";
-                $message .= 'Запасные:'."\n";
-                foreach ($team->players as $player) {
-                    if ($player->row == '0') {
-                        $message .= $player->name.' (';
-                        $message .= $player->club.') ';
-                        $message .= '- '.$ampluaName[$player->amplua].', ';
-                        $message .= $player->price."\n";
-                    }
-                }
-            }
-        }
-        
-        $this->send($chat['id'], $message);
-         */
-    }
-    
-    /**
      * Неизвестная команда, ошибка
      */
-    public function unknownCommand($chat) {
+    public function unknownCommand($chat)
+    {
         $this->send($chat['id'], 'Я не понимаю тебя. Чтоб посмотреть список известных мне команд просто набери /help');
     }
     
     /**
      * Отправляет сообщение
      */
-    public function send($chatId, $message) {
-        $bot = new BotApi(Yii::$app->params['token']);
+    public function send($chatId, $message)
+    {
+        $bot = new BotApi(Yii::$app->params['token'][$this->id]);
         try {
             $bot->sendMessage($chatId, $message);
         } catch (Exception $e) {
