@@ -1,6 +1,7 @@
 <?php
 
 use yii\db\Migration;
+use app\models\User;
 
 class m170717_133227_add_user_site extends Migration
 {
