@@ -12,9 +12,10 @@ class Html extends Object
     /**
      * Загружает страницу по url
      * @param string $url адрес страницы
-     * @return \DOMDocument DOM-дерево
+     * @return DOMDocument DOM-дерево
      */
-    public static function load($url) {
+    public static function load($url)
+    {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

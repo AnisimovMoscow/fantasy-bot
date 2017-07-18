@@ -20,7 +20,8 @@ class TournamentsController extends Controller
     /**
      * Обновление дедлайнов турнира
      */
-    public function actionDeadlines() {
+    public function actionDeadlines()
+    {
         $tournaments = Tournament::find()->all();
         
         $month = [
@@ -85,8 +86,8 @@ class TournamentsController extends Controller
     /**
      * Отравка сообщения о сегодняшних дедлайнах
      */
-    public function actionToday() {
-        $bot = new BotApi(Yii::$app->params['token']);
+    public function actionToday()
+    {
         $start = time();
         $end = strtotime('+1 day');
         
@@ -109,6 +110,7 @@ class TournamentsController extends Controller
                 }
                 
                 try {
+                    $bot = new BotApi(Yii::$app->params['token'][$user->site]);
                     $bot->sendMessage($user->chat_id, $message);
                 } catch (Exception $e) {
                     Yii::info($e->getMessage(), 'send');
@@ -120,8 +122,8 @@ class TournamentsController extends Controller
     /**
      * Проверка замен перед дедлайном
      */
-    public function actionCheck() {
-        $bot = new BotApi(Yii::$app->params['token']);
+    public function actionCheck()
+    {
         $time = time() + 2*60*60;
         
         $tournaments = Tournament::find()
@@ -138,6 +140,7 @@ class TournamentsController extends Controller
                         $message .= "\n".$date->format('H:i').'  '.$tournament->name;
 
                         try {
+                            $bot = new BotApi(Yii::$app->params['token']);
                             $bot->sendMessage($team->user->chat_id, $message);
                         } catch (Exception $e) {
                             Yii::info($e->getMessage(), 'send');

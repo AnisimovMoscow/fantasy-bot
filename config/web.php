@@ -11,7 +11,7 @@ return [
             'enableCsrfValidation' => false,
             'enableCookieValidation' => false,
             'parsers' => [
-            'application/json' => 'yii\web\JsonParser'
+                'application/json' => 'yii\web\JsonParser',
             ],
         ],
         'urlManager' => [

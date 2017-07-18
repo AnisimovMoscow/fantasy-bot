@@ -1,13 +1,13 @@
 {
-    "minimum-stability": "stable",
     "require": {
-        "php": ">=5.4.0",
-        "yiisoft/yii2": "*",
-        "telegram-bot/api": "2.*"
+        "yiisoft/yii2": "^2.0",
+        "telegram-bot/api": "^2.3"
     },
-    "extra": {
-        "asset-installer-paths": {
-            "bower-asset-library": "vendor/bower"
+    "config": {
+        "fxp-asset": {
+            "installer-paths": {
+                "bower-asset-library": "vendor/bower"
+            }
         }
     }
 }

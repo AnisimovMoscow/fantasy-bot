@@ -1,7 +1,6 @@
 <?php
 namespace app\commands;
 
-use Yii;
 use yii\console\Controller;
 use app\models\User;
 
@@ -13,7 +12,8 @@ class UsersController extends Controller
     /**
      * Обновление списка команд
      */
-    public function actionUpdate($id) {
+    public function actionUpdate($id)
+    {
         $user = User::findOne($id);
         if ($user === null) {
             echo "Неверный id\n";

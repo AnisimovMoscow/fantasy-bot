@@ -9,24 +9,28 @@ use app\components\Html;
  */
 class Team extends ActiveRecord
 {
-    public function rules() {
+    public function rules()
+    {
         return [
             [['user_id', 'url', 'name', 'tournament_id'], 'safe'],
         ];
     }
     
-    public function getTournament() {
+    public function getTournament()
+    {
         return $this->hasOne(Tournament::className(), ['id' => 'tournament_id']);
     }
     
-    public function getUser() {
+    public function getUser()
+    {
         return $this->hasOne(User::className(), ['id' => 'user_id']);
     }
     
     /**
      * Возвращает количество оставшихся трансферов
      */
-    public function getTransfers() {
+    public function getTransfers()
+    {
         $dom = Html::load($this->url);
         $tables = $dom->getElementsByTagName('table');
         foreach ($tables as $table) {
