@@ -36,7 +36,8 @@ class UsersController extends Controller
      */
     public function actionUpdateAll() {
         $users = User::find()->where(['!=', 'profile_url', ''])->all();
-        foreach ($users as $user) {
+        foreach ($users as $i => $user) {
+            echo $i.' '.$user->id.' '.$user->first_name.' '.$user->last_name."\n";
             $user->updateTeams();
         }
     }
