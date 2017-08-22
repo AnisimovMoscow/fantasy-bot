@@ -140,7 +140,7 @@ class TournamentsController extends Controller
                         $message .= "\n".$date->format('H:i').'  '.$tournament->name;
 
                         try {
-                            $bot = new BotApi(Yii::$app->params['token']);
+                            $bot = new BotApi(Yii::$app->params['token'][$team->user->site]);
                             $bot->sendMessage($team->user->chat_id, $message);
                         } catch (Exception $e) {
                             Yii::info($e->getMessage(), 'send');

@@ -14,6 +14,13 @@ return [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
                 ],
+                [
+                    'class' => 'yii\log\FileTarget',
+                    'levels' => ['info'],
+                    'categories' => ['send'],
+                    'logFile' => '@runtime/logs/send.log',
+                    'logVars' => [],
+                ],
             ],
         ],
         'db' => require(__DIR__ . '/db.php'),
