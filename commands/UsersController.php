@@ -56,6 +56,7 @@ class UsersController extends Controller
         $tournaments = Tournament::find()
             ->where(['>', 'deadline', date('Y-m-d H:i:s')])
             ->andWhere(['<', 'deadline', date('Y-m-d H:i:s', $time)])
+            ->andWhere(['like', 'url', 'https://www.sports.ru/'])
             ->all();
         
         $cache = Yii::$app->cache;
