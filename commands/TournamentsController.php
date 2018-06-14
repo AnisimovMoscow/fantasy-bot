@@ -61,6 +61,8 @@ class TournamentsController extends Controller
                                         $time = mktime($deadline[2], $deadline[3], 0, $month[$deadline[1]], $deadline[0], $year);
                                     }
                                     $deadline = date('Y-m-d H:i:s', $time);
+                                } else {
+                                    $deadline = null;
                                 }
                             } elseif ($tr->getElementsByTagName('th')->item(0)->nodeValue == 'Трансферы в туре') {
                                 $transfers = $tr->getElementsByTagName('td')->item(0)->nodeValue;
@@ -69,7 +71,7 @@ class TournamentsController extends Controller
                     }
                 }
                 
-                if ($tournament->deadline != $deadline) {
+                if (!empty($deadline) && $tournament->deadline != $deadline) {
                     $tournament->deadline = $deadline;
                     if (isset($transfers)) {
                         $tournament->checked = false;
