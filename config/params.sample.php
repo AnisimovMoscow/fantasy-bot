@@ -11,4 +11,11 @@ return [
         'token' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
         'chat_id' => '-12345678',
     ],
+    'moneyball' => [
+        'users' => [
+            '12345678' => 'Name',
+        ],
+        'token' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
+        'chat_id' => '-12345678',
+    ],
 ];

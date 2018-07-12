@@ -60,49 +60,52 @@ class UsersController extends Controller
             ->all();
         
         $cache = Yii::$app->cache;
-        $params = Yii::$app->params['avengers'];
-        foreach ($tournaments as $tournament) {
-            $key = 'avengers_check_'.$tournament->id;
-            $check = $cache->get($key);
-            if (!$check) {
-                $notChanges = [];
-                foreach ($params['users'] as $id => $name) {
-                    $profileUrl = 'https://www.sports.ru/profile/'.$id.'/';
-                    $user = User::findOne(['profile_url' => $profileUrl]);
-                    if ($user === null) {
-                        echo $name." - user not found\n";
-                        continue;
+        
+        foreach (['avengers', 'moneyball'] as $teamName) {
+            $params = Yii::$app->params[$teamName];
+            foreach ($tournaments as $tournament) {
+                $key = $teamName.'_check_'.$tournament->id;
+                $check = $cache->get($key);
+                if (!$check) {
+                    $notChanges = [];
+                    foreach ($params['users'] as $id => $name) {
+                        $profileUrl = 'https://www.sports.ru/profile/'.$id.'/';
+                        $user = User::findOne(['profile_url' => $profileUrl]);
+                        if ($user === null) {
+                            echo $name." - user not found\n";
+                            continue;
+                        }
+
+                        $team = Team::findOne(['user_id' => $user->id, 'tournament_id' => $tournament->id]);
+                        if ($team === null) {
+                            echo $name." - user not found\n";
+                            continue;
+                        }
+
+                        $transfers = $team->getTransfers();
+                        if ($transfers == $tournament->transfers) {
+                            $notChanges[] = $name;
+                        }
                     }
-                    
-                    $team = Team::findOne(['user_id' => $user->id, 'tournament_id' => $tournament->id]);
-                    if ($team === null) {
-                        echo $name." - user not found\n";
-                        continue;
+
+                    $message = $tournament->name.': ';
+                    if (empty($notChanges)) {
+                        $message .= 'все сделали замены';
+                    } elseif (count($notChanges) == 1) {
+                        $message .= $notChanges[0].' не сделал замены';
+                    } else {
+                        $message .= implode(', ', $notChanges).' не сделали замены';
                     }
-                    
-                    $transfers = $team->getTransfers();
-                    if ($transfers == $tournament->transfers) {
-                        $notChanges[] = $name;
+
+                    try {
+                        $bot = new BotApi($params['token']);
+                        $bot->sendMessage($params['chat_id'], $message);
+                    } catch (Exception $e) {
+                        Yii::info($e->getMessage(), 'send');
                     }
+
+                    $cache->set($key, true, 60*60);
                 }
-                
-                $message = $tournament->name.': ';
-                if (empty($notChanges)) {
-                    $message .= 'все сделали замены';
-                } elseif (count($notChanges) == 1) {
-                    $message .= $notChanges[0].' не сделал замены';
-                } else {
-                    $message .= implode(', ', $notChanges).' не сделали замены';
-                }
-                
-                try {
-                    $bot = new BotApi($params['token']);
-                    $bot->sendMessage($params['chat_id'], $message);
-                } catch (Exception $e) {
-                    Yii::info($e->getMessage(), 'send');
-                }
-                
-                $cache->set($key, true, 60*60);
             }
         }
     }
