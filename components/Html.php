@@ -1,13 +1,13 @@
 <?php
 namespace app\components;
 
-use yii\base\Object;
+use yii\base\BaseObject;
 use DOMDocument;
 
 /**
  * Работа с html
  */
-class Html extends Object
+class Html extends BaseObject
 {
     /**
      * Загружает страницу по url
