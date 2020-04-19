@@ -41,6 +41,11 @@ class SiteController extends Controller
                 'url' => 'ua.tribuna.com',
                 'id' => 'ua',
             ],
+            'by' => [
+                'regexp' => 'by\.tribuna\.com',
+                'url' => 'by.tribuna.com',
+                'id' => 'by',
+            ],
         ];
         $this->host = $hosts[$site];
         
