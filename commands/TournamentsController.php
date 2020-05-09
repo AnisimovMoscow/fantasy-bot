@@ -3,14 +3,12 @@ namespace app\commands;
 
 use Yii;
 use yii\console\Controller;
-use TelegramBot\Api\BotApi;
 use app\models\Tournament;
 use app\models\Team;
 use app\models\User;
-use app\components\Html;
+use app\components\Message;
 use DateTime;
 use DateTimeZone;
-use Exception;
 
 /**
  * Команды для запуска по расписанию
@@ -23,61 +21,17 @@ class TournamentsController extends Controller
     public function actionDeadlines()
     {
         $tournaments = Tournament::find()->all();
-        
-        $month = [
-            'января' => 1,
-            'февраля' => 2,
-            'марта' => 3,
-            'апреля' => 4,
-            'мая' => 5,
-            'июня' => 6,
-            'июля' => 7,
-            'августа' => 8,
-            'сентября' => 9,
-            'октября' => 10,
-            'ноября' => 11,
-            'декабря' => 12,
-        ];
-        
         foreach ($tournaments as $tournament) {
             $team = Team::findOne(['tournament_id' => $tournament->id]);
             if ($team !== null) {
-                $dom = Html::load($team->url);
-                $tables = $dom->getElementsByTagName('table');
-                foreach ($tables as $table) {
-                    if ($table->getAttribute('class') == 'profile-table') {
-                        $trs = $table->getElementsByTagName('tr');
-                        foreach ($trs as $tr) {
-                            if ($tr->getElementsByTagName('th')->item(0)->nodeValue == 'Дедлайн') {
-                                $deadline = $tr->getElementsByTagName('td')->item(0)->nodeValue;
-                                $deadline = str_replace(['|', ':'], ' ', $deadline);
-                                $deadline = explode(' ', $deadline);
-                                if (count($deadline) == 4) {
-                                    $year = date('Y');
-                                    $time = mktime($deadline[2], $deadline[3], 0, $month[$deadline[1]], $deadline[0], $year);
-                                    $now = time();
-                                    if ($time < $now) {
-                                        $year++;
-                                        $time = mktime($deadline[2], $deadline[3], 0, $month[$deadline[1]], $deadline[0], $year);
-                                    }
-                                    $deadline = date('Y-m-d H:i:s', $time);
-                                } else {
-                                    $deadline = null;
-                                }
-                            } elseif ($tr->getElementsByTagName('th')->item(0)->nodeValue == 'Трансферы в туре') {
-                                $transfers = $tr->getElementsByTagName('td')->item(0)->nodeValue;
-                            }
-                        }
-                    }
-                }
-                
-                if (!empty($deadline) && $tournament->deadline != $deadline) {
-                    $tournament->deadline = $deadline;
-                    if (isset($transfers)) {
-                        $tournament->checked = false;
-                        $tournament->transfers = $transfers;
-                    } else {
+                $deadline = $team->getDeadline();
+                if (!empty($deadline['deadline']) && $tournament->deadline != $deadline['deadline']) {
+                    $tournament->deadline = $deadline['deadline'];
+                    if (empty($deadline['transfers'])) {
                         $tournament->checked = true;
+                    } else {
+                        $tournament->checked = false;
+                        $tournament->transfers = $deadline['transfers'];
                     }
                     $tournament->save();
                 }
@@ -111,12 +65,7 @@ class TournamentsController extends Controller
                     $message .= "\n".$date->format('H:i').'  '.$name;
                 }
                 
-                try {
-                    $bot = new BotApi(Yii::$app->params['token'][$user->site]);
-                    $bot->sendMessage($user->chat_id, $message);
-                } catch (Exception $e) {
-                    Yii::info($e->getMessage(), 'send');
-                }
+                Message::send($user->chat_id, $message, $user, $user->site);
             }
         }
     }
@@ -140,13 +89,7 @@ class TournamentsController extends Controller
                         $message = 'Ты ещё не сделал замены, скоро дедлайн:';
                         $date = new DateTime($tournament->deadline, new DateTimeZone(Yii::$app->timeZone));
                         $message .= "\n".$date->format('H:i').'  '.$tournament->name;
-
-                        try {
-                            $bot = new BotApi(Yii::$app->params['token'][$team->user->site]);
-                            $bot->sendMessage($team->user->chat_id, $message);
-                        } catch (Exception $e) {
-                            Yii::info($e->getMessage(), 'send');
-                        }
+                        Message::send($team->user->chat_id, $message, $team->user, $team->user->site);
                     }
                 }
             }

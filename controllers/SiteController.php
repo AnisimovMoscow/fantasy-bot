@@ -4,11 +4,10 @@ namespace app\controllers;
 
 use Yii;
 use yii\web\Controller;
-use TelegramBot\Api\BotApi;
 use app\models\User;
+use app\components\Message;
 use DateTime;
 use DateTimeZone;
-use Exception;
 
 /**
  * Обработка запросов
@@ -91,7 +90,7 @@ class SiteController extends Controller
             $message = 'Привет! Если тебе нужна помощь, набери /help';
         }
         
-        $this->send($chat['id'], $message);
+        Message::send($chat['id'], $message, $user, $this->host['id']);
     }
     
     /**
@@ -99,9 +98,9 @@ class SiteController extends Controller
      */
     public function commandProfile($params, $chat)
     {
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
         if (count($params) == 1) {
             if (preg_match('/^https:\/\/'.$this->host['regexp'].'\/profile\/\d+[\/]$/', $params[0])) {
-                $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
                 if ($user === null) {
                     $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
                 } else {
@@ -125,7 +124,7 @@ class SiteController extends Controller
             $message = 'Нужно просто отправить ссылку на свой профиль';
         }
         
-        $this->send($chat['id'], $message);
+        Message::send($chat['id'], $message, $user, $this->host['id']);
     }
     
     /**
@@ -134,7 +133,6 @@ class SiteController extends Controller
     public function commandDeadlines($params, $chat)
     {
         $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
-        $formatter = Yii::$app->formatter;
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
         } else {
@@ -154,7 +152,7 @@ class SiteController extends Controller
             }
         }
 
-        $this->send($chat['id'], $message);
+        Message::send($chat['id'], $message, $user, $this->host['id']);
     }
     
     /**
@@ -215,7 +213,7 @@ class SiteController extends Controller
             }
         }
 
-        $this->send($chat['id'], $message);
+        Message::send($chat['id'], $message, $user, $this->host['id']);
     }
     
     /**
@@ -234,7 +232,7 @@ class SiteController extends Controller
             $message = 'Ты уже отписан от уведомлений. Если хочет снова подписаться, набери /start';
         }
         
-        $this->send($chat['id'], $message);
+        Message::send($chat['id'], $message, $user, $this->host['id']);
     }
     
     /**
@@ -251,7 +249,7 @@ class SiteController extends Controller
             $message = 'Ты отписан от уведомлений. Для подписки набери /start';
         }
         
-        $this->send($chat['id'], $message);
+        Message::send($chat['id'], $message, $user, $this->host['id']);
     }
     
     /**
@@ -259,6 +257,7 @@ class SiteController extends Controller
      */
     public function commandHelp($params, $chat)
     {
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
         $message = 'Вот команды, которые я понимаю:'."\n";
         $message .= '/profile url - сообщить ссылку на свой профиль'."\n";
         $message .= '/deadlines - дедлайны турниров'."\n";
@@ -267,7 +266,7 @@ class SiteController extends Controller
         $message .= '/start - подписаться на уведомления'."\n";
         $message .= '/stop - отписаться от уведомлений';
         
-        $this->send($chat['id'], $message);
+        Message::send($chat['id'], $message, $user, $this->host['id']);
     }
     
     /**
@@ -275,19 +274,8 @@ class SiteController extends Controller
      */
     public function unknownCommand($chat)
     {
-        $this->send($chat['id'], 'Я не понимаю тебя. Чтоб посмотреть список известных мне команд просто набери /help');
-    }
-    
-    /**
-     * Отправляет сообщение
-     */
-    public function send($chatId, $message)
-    {
-        $bot = new BotApi(Yii::$app->params['token'][$this->host['id']]);
-        try {
-            $bot->sendMessage($chatId, $message);
-        } catch (Exception $e) {
-            Yii::info(print_r($e, true), 'send');
-        }
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $message = 'Я не понимаю тебя. Чтоб посмотреть список известных мне команд просто набери /help';
+        Message::send($chat['id'], $message, $user, $this->host['id']);
     }
 }

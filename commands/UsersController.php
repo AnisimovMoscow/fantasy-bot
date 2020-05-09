@@ -7,6 +7,7 @@ use TelegramBot\Api\BotApi;
 use app\models\User;
 use app\models\Tournament;
 use app\models\Team;
+use app\components\Message;
 use Exception;
 
 /**
@@ -78,7 +79,7 @@ class UsersController extends Controller
 
                         $team = Team::findOne(['user_id' => $user->id, 'tournament_id' => $tournament->id]);
                         if ($team === null) {
-                            echo $name." - user not found\n";
+                            echo $name." - team not found\n";
                             continue;
                         }
 
@@ -97,12 +98,7 @@ class UsersController extends Controller
                         $message .= implode(', ', $notChanges).' не сделали замены';
                     }
 
-                    try {
-                        $bot = new BotApi($params['token']);
-                        $bot->sendMessage($params['chat_id'], $message);
-                    } catch (Exception $e) {
-                        Yii::info($e->getMessage(), 'send');
-                    }
+                    Message::send($params['chat_id'], $message, null, null, $params['token']);
 
                     $cache->set($key, true, 60*60);
                 }
