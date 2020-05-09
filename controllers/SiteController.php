@@ -229,9 +229,26 @@ class SiteController extends Controller
         } elseif ($user->notification) {
             $user->notification = false;
             $user->save();
-            $message = 'Ты отписался от напоминаний. Если передумал, набери /start';
+            $message = 'Ты отписался от уведомлений. Если передумал, набери /start';
         } else {
-            $message = 'Ты уже отписан от напоминаний. Если хочет снова подписаться, набери /start';
+            $message = 'Ты уже отписан от уведомлений. Если хочет снова подписаться, набери /start';
+        }
+        
+        $this->send($chat['id'], $message);
+    }
+    
+    /**
+     * Статус уведомлений
+     */
+    public function commandStatus($params, $chat)
+    {
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        if ($user === null) {
+            $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
+        } elseif ($user->notification) {
+            $message = 'Ты подписан на уведомления. Для отписки набери /stop';
+        } else {
+            $message = 'Ты отписан от уведомлений. Для подписки набери /start';
         }
         
         $this->send($chat['id'], $message);
@@ -246,6 +263,8 @@ class SiteController extends Controller
         $message .= '/profile url - сообщить ссылку на свой профиль'."\n";
         $message .= '/deadlines - дедлайны турниров'."\n";
         $message .= '/teams - список твоих фентези-команд'."\n";
+        $message .= '/status - проверить статус подписки'."\n";
+        $message .= '/start - подписаться на уведомления'."\n";
         $message .= '/stop - отписаться от уведомлений';
         
         $this->send($chat['id'], $message);
