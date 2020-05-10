@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use Yii;
 use yii\db\ActiveRecord;
 use app\components\Html;
 
@@ -87,6 +88,44 @@ class User extends ActiveRecord
         }
     }
     
+    /**
+     * Статистика пользователей
+     */
+    public static function stat()
+    {
+        $stat = [];
+
+        // активные/с профилем
+        $result = Yii::$app->db->createCommand("
+            SELECT profile_url!='' AS profile, notification, count(*) AS count
+            FROM user
+            GROUP BY profile_url!='', notification
+        ")->queryAll();
+        $data = [];
+        foreach ($result as $row) {
+            $data[$row['profile']][$row['notification']] = $row['count'];
+        }
+
+        $stat['total'] = $data[0][0] + $data[0][1] + $data[1][0] + $data[1][1];
+        $stat['profile'] = $data[1][0] + $data[1][1];
+        $stat['active'] = $data[0][1] + $data[1][1];
+        $stat['profile_active'] = $data[1][1];
+
+        // по сайтам
+        $result = Yii::$app->db->createCommand("
+            SELECT site, count(*) AS count
+            FROM user
+            GROUP BY site
+        ")->queryAll();
+        $data = array_column($result, 'count', 'site');
+
+        $stat['ru']['total'] = $data['ru'];
+        $stat['by']['total'] = $data['by'];
+        $stat['ua']['total'] = $data['ua'];
+
+        return $stat;
+    }
+
     /**
      * Удаляет эмодзи из названия команды
      */

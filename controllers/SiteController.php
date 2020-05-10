@@ -254,6 +254,27 @@ class SiteController extends Controller
     }
     
     /**
+     * Статистика бота
+     */
+    public function commandStat($params, $chat)
+    {
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $stat = User::stat();
+        $message = "Статистика\n\n";
+
+        $message .= "Всего: {$stat['total']}\n";
+        $message .= "С профилем: {$stat['profile']}\n";
+        $message .= "Активные: {$stat['active']}\n";
+        $message .= "Активные с профилем: {$stat['profile_active']}\n\n";
+
+        $message .= "RU: {$stat['ru']['total']}\n";
+        $message .= "BY: {$stat['by']['total']}\n";
+        $message .= "UA: {$stat['ua']['total']}\n";
+
+        Message::send($chat['id'], $message, $user, $this->host['id']);
+    }
+    
+    /**
      * Помощь, список доступных команд
      */
     public function commandHelp($params, $chat)
