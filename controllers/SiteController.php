@@ -31,7 +31,7 @@ class SiteController extends Controller
         
         $hosts = [
             'ru' => [
-                'regexp' => 'www\.sports\.ru',
+                'regexp' => 'sports\.ru',
                 'url' => 'www.sports.ru',
                 'id' => 'ru',
             ],
@@ -54,7 +54,7 @@ class SiteController extends Controller
             $method = 'command'.ucfirst(ltrim($command, '/'));
             if (method_exists($this, $method) && is_callable([$this, $method])) {
                 $this->$method($params, $update['message']['chat']);
-            } elseif (preg_match('/https:\/\/'.$this->host['regexp'].'\/profile\/\d+[\/]$/', $command)) {
+            } elseif (preg_match('/'.$this->host['regexp'].'\/profile\/\d+/', $command)) {
                 $this->commandProfile([$command], $update['message']['chat']);
             } else {
                 $this->unknownCommand($update['message']['chat']);
@@ -100,15 +100,16 @@ class SiteController extends Controller
     {
         $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
         if (count($params) == 1) {
-            if (preg_match('/^https:\/\/'.$this->host['regexp'].'\/profile\/\d+[\/]$/', $params[0])) {
+            if (preg_match('/'.$this->host['regexp'].'\/profile\/(\d+)/', $params[0], $matches)) {
                 if ($user === null) {
                     $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
                 } else {
-                    $checkUser = User::findOne(['profile_url' => $params[0]]);
+                    $url = "https://{$this->host['url']}/profile/{$matches[1]}/";
+                    $checkUser = User::findOne(['profile_url' => $url]);
                     if ($checkUser !== null && $checkUser->id !== $user->id) {
                         $message = 'Пользователь с такой ссылкой уже зарегистрирован.';
                     } else {
-                        $user->profile_url = $params[0];
+                        $user->profile_url = $url;
                         $user->save();
                         $user->updateTeams();
                         $message = 'Всё отлично. Молодец! Я запомнил ссылку на твой профиль. ';
