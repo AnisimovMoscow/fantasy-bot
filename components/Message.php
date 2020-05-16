@@ -32,7 +32,7 @@ class Message extends BaseObject
             Yii::info('Message: '.$e->getMessage(), 'send');
             Yii::info('Code: '.$e->getCode(), 'send');
             
-            if ($user !== null && $e->getCode() == 403) {
+            if ($user !== null && in_array($e->getCode(), [400, 403])) {
                 $user->notification = false;
                 $user->save();
             }
