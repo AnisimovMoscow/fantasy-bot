@@ -31,12 +31,11 @@ class Message extends BaseObject
             Yii::info('Send error', 'send');
             Yii::info('Message: '.$e->getMessage(), 'send');
             Yii::info('Code: '.$e->getCode(), 'send');
-            /*
-            if ($user !== nill && $e->getCode() == 0) {
+            
+            if ($user !== null && $e->getCode() == 403) {
                 $user->notification = false;
                 $user->save();
             }
-            */
         }
     }
 }
