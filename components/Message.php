@@ -28,9 +28,7 @@ class Message extends BaseObject
         try {
             $bot->sendMessage($chatId, $text);
         } catch (Exception $e) {
-            Yii::info('Send error', 'send');
-            Yii::info('Message: '.$e->getMessage(), 'send');
-            Yii::info('Code: '.$e->getCode(), 'send');
+            Yii::info('Send error. Message: '.$e->getMessage().' Code: '.$e->getCode().' User: '.(($user === null) ? 'null' : $user->id), 'send');
             
             if ($user !== null && in_array($e->getCode(), [400, 403])) {
                 $user->notification = false;
