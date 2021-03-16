@@ -18,6 +18,17 @@ class User extends ActiveRecord
         ];
     }
     
+    public function beforeSave($insert)
+    {
+        if (parent::beforeSave($insert)) {
+            $this->first_name = $this->removeEmoji($this->first_name);
+            $this->last_name = $this->removeEmoji($this->last_name);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public function getTeams()
     {
         return $this->hasMany(Team::className(), ['user_id' => 'id']);
@@ -101,7 +112,10 @@ class User extends ActiveRecord
             FROM user
             GROUP BY profile_url!='', notification
         ")->queryAll();
-        $data = [];
+        $data = [
+            [0, 0],
+            [0, 0],
+        ];
         foreach ($result as $row) {
             $data[$row['profile']][$row['notification']] = $row['count'];
         }
@@ -119,9 +133,9 @@ class User extends ActiveRecord
         ")->queryAll();
         $data = array_column($result, 'count', 'site');
 
-        $stat['ru']['total'] = $data['ru'];
-        $stat['by']['total'] = $data['by'];
-        $stat['ua']['total'] = $data['ua'];
+        $stat['ru']['total'] = $data['ru'] ?? 0;
+        $stat['by']['total'] = $data['by'] ?? 0;
+        $stat['ua']['total'] = $data['ua'] ?? 0;
 
         return $stat;
     }
