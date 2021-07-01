@@ -3,12 +3,10 @@ namespace app\commands;
 
 use Yii;
 use yii\console\Controller;
-use TelegramBot\Api\BotApi;
 use app\models\User;
 use app\models\Tournament;
 use app\models\Team;
 use app\components\Message;
-use Exception;
 
 /**
  * Команды для работы с пользователем
