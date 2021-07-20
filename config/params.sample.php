@@ -5,18 +5,16 @@ return [
         'ua' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
         'by' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
     ],
-    'avengers' => [
-        'users' => [
-            '12345678' => 'Name',
+    'teams' => [
+        [
+            'slug' => 'the-avengers',
+            'token' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
+            'chat_id' => '-12345678',
         ],
-        'token' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
-        'chat_id' => '-12345678',
-    ],
-    'moneyball' => [
-        'users' => [
-            '12345678' => 'Name',
+        [
+            'slug' => 'moneyball',
+            'token' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
+            'chat_id' => '-12345678',
         ],
-        'token' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
-        'chat_id' => '-12345678',
     ],
 ];
