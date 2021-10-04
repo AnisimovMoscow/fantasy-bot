@@ -82,6 +82,8 @@ class TournamentsController extends Controller
             ->andWhere(['<', 'deadline', date('Y-m-d H:i:s', $time)])
             ->all();
         foreach ($tournaments as $tournament) {
+            $tournament->checked = true;
+            $tournament->save();
             foreach ($tournament->teams as $team) {
                 if ($team->user->notification) {
                     $transfers = $team->getTransfers();
@@ -93,8 +95,6 @@ class TournamentsController extends Controller
                     }
                 }
             }
-            $tournament->checked = true;
-            $tournament->save();
         }
     }
 }
