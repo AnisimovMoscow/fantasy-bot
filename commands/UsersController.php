@@ -8,6 +8,7 @@ use app\models\Tournament;
 use app\models\Team;
 use app\components\Message;
 use app\components\Fantasyteams;
+use yii\console\ExitCode;
 
 /**
  * Команды для работы с пользователем
@@ -39,7 +40,8 @@ class UsersController extends Controller
     /**
      * Обновляет список команд у всех пользователей
      */
-    public function actionUpdateAll() {
+    public function actionUpdateAll()
+    {
         $users = User::find()->where(['!=', 'profile_url', ''])->all();
         foreach ($users as $i => $user) {
             echo $i.' '.$user->id.' '.$user->first_name.' '.$user->last_name."\n";
@@ -50,7 +52,8 @@ class UsersController extends Controller
     /**
      * Проверяет замены в команде
      */
-    public function actionCheckTeam() {
+    public function actionCheckTeam()
+    {
         $time = time() + 30*60;
         
         $tournaments = Tournament::find()
@@ -106,5 +109,49 @@ class UsersController extends Controller
                 }
             }
         }
+    }
+
+    /**
+     * Отправляет рассылку пользователям
+     */
+    public function actionSend()
+    {
+        $italyUrl = 'https://www.sports.ru/fantasy/football/tournament/48.html';
+        $message = "Самый полезный канал по фэнтези Италии - https://t.me/fangazzetta\n\n-коэффициенты\n-статистика\n-составы\n-травмы и дисквалификации";
+
+        $tournament = Tournament::findOne(['url' => $italyUrl]);
+        if ($tournament === null) {
+            echo "Турнир не найден\n";
+            return ExitCode::DATAERR;
+        }
+
+        $users = User::find()
+            ->where(['!=', 'profile_url', ''])
+            ->andWhere(['>=', 'id', 800])
+            ->andWhere(['<', 'id', 1100])
+            ->andWhere(['site' => 'ru'])
+            ->andWhere(['notification' => true])
+            ->all();
+
+        $total = 0;
+        foreach ($users as $i => $user) {
+            $team = Team::findOne([
+                'user_id' => $user->id,
+                'tournament_id' => $tournament->id,
+            ]);
+            if ($team === null) {
+                continue;
+            }
+
+            $total++;
+            echo "{$i} #{$user->id} {$user->first_name} {$user->last_name}\n";
+
+            Message::send($user->chat_id, $message, $user, $user->site);
+            //Message::send("814485", $message, $user, $user->site);
+            //die();
+        }
+
+        echo "Отправлено сообщений: {$total}\n";
+        return ExitCode::OK;
     }
 }
