@@ -51,7 +51,7 @@ return [
                 ],
                 [
                     'class' => 'notamedia\sentry\SentryTarget',
-                    'dsn' => 'https://2336486e157d4a1d8fcbf302de72cde2@sentry.io/1499743',
+                    'dsn' => 'https://2336486e157d4a1d8fcbf302de72cde2@o102782.ingest.sentry.io/1499743',
                     'levels' => ['error', 'warning'],
                     'context' => true,
                 ],

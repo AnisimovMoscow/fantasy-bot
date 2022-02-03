@@ -145,7 +145,7 @@ class SiteController extends Controller
                 }
                 asort($deadlines);
                 foreach ($deadlines as $name => $deadline) {
-                    $date = new DateTime($deadline, new DateTimeZone(Yii::$app->timeZone));
+                    $date = new DateTime($deadline, new DateTimeZone($user->timezone));
                     $message .= "\n- ".$name.': '.$this->formatDate($date);
                 }
             } else {
@@ -252,6 +252,35 @@ class SiteController extends Controller
         
         Message::send($chat['id'], $message, $user, $this->host['id']);
     }
+
+    /**
+     * Статус уведомлений
+     */
+    public function commandTimezone($params, $chat)
+    {
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        if ($user === null) {
+            $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
+        } elseif (count($params) == 1) {
+            if (User::validateTimezone($params[0])) {
+                $user->timezone = $params[0];
+                $user->save();
+                $message = 'Часовой пояс изменён. Для смены набери /timezone';
+            } else {
+                $message = "Некорректный часовой пояс\n\n";
+                $message .= "Список доступных часовых поясов тут - https://telegra.ph/CHasovye-poyasa-02-03";
+            }
+        } else {
+            $message = "Твой часовой пояс: {$user->timezone}\n";
+            $date = new DateTime('now', new DateTimeZone($user->timezone));
+            $message .= 'Текущее время: '.$date->format('H:i')."\n\n";
+            $message .= "Чтоб сменить часовой пояс отправь команду: /timezone [часовой пояс]\n";
+            $message .= "Например: /timezone Europe/London\n";
+            $message .= "Список доступных часовых поясов тут - https://telegra.ph/CHasovye-poyasa-02-03";
+        }
+        
+        Message::send($chat['id'], $message, $user, $this->host['id']);
+    }
     
     /**
      * Статистика бота
@@ -285,6 +314,7 @@ class SiteController extends Controller
         $message .= '/deadlines - дедлайны турниров'."\n";
         $message .= '/teams - список твоих фентези-команд'."\n";
         $message .= '/status - проверить статус подписки'."\n";
+        $message .= '/timezone zone - сменить часовой пояс'."\n";
         $message .= '/start - подписаться на уведомления'."\n";
         $message .= '/stop - отписаться от уведомлений';
         

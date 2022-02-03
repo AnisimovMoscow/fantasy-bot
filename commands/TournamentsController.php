@@ -61,7 +61,7 @@ class TournamentsController extends Controller
                 asort($deadlines);
                 $message = 'Сегодня дедлайны:';
                 foreach ($deadlines as $name => $deadline) {
-                    $date = new DateTime($deadline, new DateTimeZone(Yii::$app->timeZone));
+                    $date = new DateTime($deadline, new DateTimeZone($user->timezone));
                     $message .= "\n".$date->format('H:i').'  '.$name;
                 }
                 
@@ -89,7 +89,7 @@ class TournamentsController extends Controller
                     $transfers = $team->getTransfers();
                     if ($transfers == $tournament->transfers) {
                         $message = 'Ты ещё не сделал замены, скоро дедлайн:';
-                        $date = new DateTime($tournament->deadline, new DateTimeZone(Yii::$app->timeZone));
+                        $date = new DateTime($tournament->deadline, new DateTimeZone($team->user->timezone));
                         $message .= "\n".$date->format('H:i').'  '.$tournament->name;
                         Message::send($team->user->chat_id, $message, $team->user, $team->user->site);
                     }
