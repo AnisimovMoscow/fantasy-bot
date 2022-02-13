@@ -150,6 +150,24 @@ class User extends ActiveRecord
     }
 
     /**
+     * Проверяет время
+     */
+    public static function validateTime($time)
+    {
+        if (preg_match('/(\d|\d\d)[\:|\-| ](\d\d)/', $time, $matches)) {
+            if ($matches[1] > 23) {
+                return '';
+            }
+            if (!in_array($matches[2], [0, 30])) {
+                return '';
+            }
+            return "{$matches[1]}:{$matches[2]}";
+        }
+
+        return '';
+    }
+
+    /**
      * Удаляет эмодзи из названия команды
      */
     private function removeEmoji($text)

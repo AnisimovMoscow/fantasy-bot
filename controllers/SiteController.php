@@ -2,12 +2,12 @@
 
 namespace app\controllers;
 
-use Yii;
-use yii\web\Controller;
-use app\models\User;
 use app\components\Message;
+use app\models\User;
 use DateTime;
 use DateTimeZone;
+use Yii;
+use yii\web\Controller;
 
 /**
  * Обработка запросов
@@ -15,12 +15,12 @@ use DateTimeZone;
 class SiteController extends Controller
 {
     private $host;
-    
+
     public function actionIndex()
     {
         return '';
     }
-    
+
     /**
      * Прием запросов от сервера Телеграм
      */
@@ -28,7 +28,7 @@ class SiteController extends Controller
     {
         $update = Yii::$app->request->post();
         Yii::info(print_r($update, true), 'hook');
-        
+
         $hosts = [
             'ru' => [
                 'regexp' => 'sports\.ru',
@@ -47,21 +47,21 @@ class SiteController extends Controller
             ],
         ];
         $this->host = $hosts[$site];
-        
+
         if (isset($update['message']['text']) && $update['message']['chat']['type'] == 'private') {
             $params = explode(' ', $update['message']['text']);
             $command = array_shift($params);
-            $method = 'command'.ucfirst(ltrim($command, '/'));
+            $method = 'command' . ucfirst(ltrim($command, '/'));
             if (method_exists($this, $method) && is_callable([$this, $method])) {
                 $this->$method($params, $update['message']['chat']);
-            } elseif (preg_match('/'.$this->host['regexp'].'\/profile\/\d+/', $command)) {
+            } elseif (preg_match('/' . $this->host['regexp'] . '\/profile\/\d+/', $command)) {
                 $this->commandProfile([$command], $update['message']['chat']);
             } else {
                 $this->unknownCommand($update['message']['chat']);
             }
         }
     }
-    
+
     /**
      * Начало работы, регистрация пользователя
      */
@@ -71,9 +71,9 @@ class SiteController extends Controller
         if ($user === null) {
             $user = new User([
                 'chat_id' => $chat['id'],
-                'first_name' => isset($chat['first_name'])? $chat['first_name'] : '',
-                'last_name' => isset($chat['last_name'])? $chat['last_name'] : '',
-                'username' => isset($chat['username'])? $chat['username'] : '',
+                'first_name' => isset($chat['first_name']) ? $chat['first_name'] : '',
+                'last_name' => isset($chat['last_name']) ? $chat['last_name'] : '',
+                'username' => isset($chat['username']) ? $chat['username'] : '',
                 'profile_url' => '',
                 'notification' => true,
                 'site' => $this->host['id'],
@@ -89,10 +89,10 @@ class SiteController extends Controller
         } else {
             $message = 'Привет! Если тебе нужна помощь, набери /help';
         }
-        
+
         Message::send($chat['id'], $message, $user, $this->host['id']);
     }
-    
+
     /**
      * Установка ссылки на профиль
      */
@@ -100,7 +100,7 @@ class SiteController extends Controller
     {
         $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
         if (count($params) == 1) {
-            if (preg_match('/'.$this->host['regexp'].'\/profile\/(\d+)/', $params[0], $matches)) {
+            if (preg_match('/' . $this->host['regexp'] . '\/profile\/(\d+)/', $params[0], $matches)) {
                 if ($user === null) {
                     $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
                 } else {
@@ -117,17 +117,17 @@ class SiteController extends Controller
                     }
                 }
             } else {
-                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт '.$this->host['url'].' и ';
+                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт ' . $this->host['url'] . ' и ';
                 $message .= 'скопируй ссылку на свою страницу. ';
-                $message .= 'Там должны быть ссылка вида https://'.$this->host['url'].'/profile/12345/';
+                $message .= 'Там должны быть ссылка вида https://' . $this->host['url'] . '/profile/12345/';
             }
         } else {
             $message = 'Нужно просто отправить ссылку на свой профиль';
         }
-        
+
         Message::send($chat['id'], $message, $user, $this->host['id']);
     }
-    
+
     /**
      * Список дедлайнов
      */
@@ -147,7 +147,7 @@ class SiteController extends Controller
                 foreach ($deadlines as $name => $deadline) {
                     $date = new DateTime($deadline, new DateTimeZone(Yii::$app->timeZone));
                     $date->setTimezone(new DateTimeZone($user->timezone));
-                    $message .= "\n- ".$name.': '.$this->formatDate($date);
+                    $message .= "\n- " . $name . ': ' . $this->formatDate($date);
                 }
             } else {
                 $message = 'Ты не создал ещё ни одной команды или не отправил мне ссылку на свой профиль';
@@ -156,14 +156,14 @@ class SiteController extends Controller
 
         Message::send($chat['id'], $message, $user, $this->host['id']);
     }
-    
+
     /**
      * Форматирует вывод даты
      */
     private function formatDate($date)
     {
-        $result = $date->format('j').' ';
-        
+        $result = $date->format('j') . ' ';
+
         $months = [
             1 => 'января',
             'февраля',
@@ -178,8 +178,8 @@ class SiteController extends Controller
             'ноября',
             'декабря',
         ];
-        $result .= $months[$date->format('n')].' (';
-        
+        $result .= $months[$date->format('n')] . ' (';
+
         $days = [
             1 => 'пн',
             'вт',
@@ -189,13 +189,13 @@ class SiteController extends Controller
             'сб',
             'вс',
         ];
-        $result .= $days[$date->format('N')].') ';
-        
+        $result .= $days[$date->format('N')] . ') ';
+
         $result .= $date->format('H:i');
-        
+
         return $result;
     }
-    
+
     /**
      * Список команд пользователя
      */
@@ -208,7 +208,7 @@ class SiteController extends Controller
             if (count($user->teams) > 0) {
                 $message = 'Твои команды:';
                 foreach ($user->teams as $team) {
-                    $message .= "\n- ".$team->name.' ('.$team->tournament->name.')';
+                    $message .= "\n- " . $team->name . ' (' . $team->tournament->name . ')';
                 }
             } else {
                 $message = 'Ты не создал ещё ни одной команды или не отправил мне ссылку на свой профиль';
@@ -217,7 +217,7 @@ class SiteController extends Controller
 
         Message::send($chat['id'], $message, $user, $this->host['id']);
     }
-    
+
     /**
      * Отписка от уведомлений
      */
@@ -233,10 +233,10 @@ class SiteController extends Controller
         } else {
             $message = 'Ты уже отписан от уведомлений. Если хочет снова подписаться, набери /start';
         }
-        
+
         Message::send($chat['id'], $message, $user, $this->host['id']);
     }
-    
+
     /**
      * Статус уведомлений
      */
@@ -250,12 +250,12 @@ class SiteController extends Controller
         } else {
             $message = 'Ты отписан от уведомлений. Для подписки набери /start';
         }
-        
+
         Message::send($chat['id'], $message, $user, $this->host['id']);
     }
 
     /**
-     * Статус уведомлений
+     * Часовой пояс
      */
     public function commandTimezone($params, $chat)
     {
@@ -274,15 +274,46 @@ class SiteController extends Controller
         } else {
             $message = "Твой часовой пояс: {$user->timezone}\n";
             $date = new DateTime('now', new DateTimeZone($user->timezone));
-            $message .= 'Текущее время: '.$date->format('H:i')."\n\n";
+            $message .= 'Текущее время: ' . $date->format('H:i') . "\n\n";
             $message .= "Чтоб сменить часовой пояс отправь команду: /timezone [часовой пояс]\n";
             $message .= "Например: /timezone Europe/London\n";
             $message .= "Список доступных часовых поясов тут - https://telegra.ph/CHasovye-poyasa-02-03";
         }
-        
+
         Message::send($chat['id'], $message, $user, $this->host['id']);
     }
-    
+
+    /**
+     * Время уведомлений
+     */
+    public function commandTime($params, $chat)
+    {
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        if ($user === null) {
+            $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
+        } elseif (count($params) == 1) {
+            $time = User::validateTime($params[0]);
+            if ($time != "") {
+                $date = new DateTime($time, new DateTimeZone($user->timezone));
+                $date->setTimezone(new DateTimeZone(Yii::$app->timeZone));
+                $user->time = $date->format('H:i:s');
+                $user->save();
+                $message = 'Время уведомлений изменено. Для смены набери /time';
+            } else {
+                $message = "Некорректное время\n\n";
+                $message .= "Отправь в формате 11:00, время должны быть кратно 30 минутам";
+            }
+        } else {
+            $date = new DateTime($user->time, new DateTimeZone(Yii::$app->timeZone));
+            $date->setTimezone(new DateTimeZone($user->timezone));
+            $message = 'Время уведомлений: ' . $date->format('H:i') . "\n";
+            $message .= "Чтоб сменить отправь команду: /time [время]\n";
+            $message .= "Например: /time 11:00";
+        }
+
+        Message::send($chat['id'], $message, $user, $this->host['id']);
+    }
+
     /**
      * Статистика бота
      */
@@ -303,25 +334,26 @@ class SiteController extends Controller
 
         Message::send($chat['id'], $message, $user, $this->host['id']);
     }
-    
+
     /**
      * Помощь, список доступных команд
      */
     public function commandHelp($params, $chat)
     {
         $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
-        $message = 'Вот команды, которые я понимаю:'."\n";
-        $message .= '/profile url - сообщить ссылку на свой профиль'."\n";
-        $message .= '/deadlines - дедлайны турниров'."\n";
-        $message .= '/teams - список твоих фентези-команд'."\n";
-        $message .= '/status - проверить статус подписки'."\n";
-        $message .= '/timezone zone - сменить часовой пояс'."\n";
-        $message .= '/start - подписаться на уведомления'."\n";
+        $message = 'Вот команды, которые я понимаю:' . "\n";
+        $message .= '/profile url - сообщить ссылку на свой профиль' . "\n";
+        $message .= '/deadlines - дедлайны турниров' . "\n";
+        $message .= '/teams - список твоих фентези-команд' . "\n";
+        $message .= '/status - проверить статус подписки' . "\n";
+        $message .= '/timezone zone - сменить часовой пояс' . "\n";
+        $message .= '/time - сменить время уведомлений' . "\n";
+        $message .= '/start - подписаться на уведомления' . "\n";
         $message .= '/stop - отписаться от уведомлений';
-        
+
         Message::send($chat['id'], $message, $user, $this->host['id']);
     }
-    
+
     /**
      * Неизвестная команда, ошибка
      */
