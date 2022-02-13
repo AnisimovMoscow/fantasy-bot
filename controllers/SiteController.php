@@ -296,7 +296,7 @@ class SiteController extends Controller
             if ($time != "") {
                 $date = new DateTime($time, new DateTimeZone($user->timezone));
                 $date->setTimezone(new DateTimeZone(Yii::$app->timeZone));
-                $user->time = $date->format('H:i:s');
+                $user->notification_time = $date->format('H:i:s');
                 $user->save();
                 $message = 'Время уведомлений изменено. Для смены набери /time';
             } else {
@@ -304,7 +304,7 @@ class SiteController extends Controller
                 $message .= "Отправь в формате 11:00, время должны быть кратно 30 минутам";
             }
         } else {
-            $date = new DateTime($user->time, new DateTimeZone(Yii::$app->timeZone));
+            $date = new DateTime($user->notification_time, new DateTimeZone(Yii::$app->timeZone));
             $date->setTimezone(new DateTimeZone($user->timezone));
             $message = 'Время уведомлений: ' . $date->format('H:i') . "\n";
             $message .= "Чтоб сменить отправь команду: /time [время]\n";
