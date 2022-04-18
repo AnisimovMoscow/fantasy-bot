@@ -2,6 +2,13 @@
 
 /* @var $this yii\web\View */
 
-$this->title = 'App';
+$this->title = 'Настройки';
 ?>
-<h1>Hello, world!</h1>
+<h1>Настройки</h1>
+
+<form>
+    <label for="time">Время:</label>
+    <input type="time" id="time" name="time" value="11:00">
+
+    <button type="submit">Сохранить</button>
+</form>
