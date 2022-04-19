@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\components\Telegram;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -28,10 +29,12 @@ class SettingsController extends Controller
 
     public function actionLoad()
     {
-        $data = Yii::$app->request->post();
+        $query = Yii::$app->request->post('data');
+        parse_str($query, $data);
         Yii::info('data' . print_r($data, true), 'send');
+        $result = Telegram::validate($data);
 
         Yii::$app->response->format = Response::FORMAT_JSON;
-        return ['ok' => true];
+        return ['ok' => $result];
     }
 }
