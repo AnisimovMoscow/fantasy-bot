@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\components\Telegram;
+use app\models\User;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -29,12 +30,31 @@ class SettingsController extends Controller
 
     public function actionLoad()
     {
-        $query = Yii::$app->request->post('data');
-        parse_str($query, $data);
-        Yii::info('data' . print_r($data, true), 'send');
-        $result = Telegram::validate($data);
-
         Yii::$app->response->format = Response::FORMAT_JSON;
-        return ['ok' => $result];
+        $query = Yii::$app->request->post('data');
+        if ($query == '') {
+            return ['ok' => false];
+        }
+
+        parse_str($query, $data);
+        $result = Telegram::validate($data);
+        if (!$result) {
+            return ['ok' => false];
+        }
+
+        $json = json_decode($data['user']);
+        $user = User::findOne(['chat_id' => $json->id, 'site' => 'ru']);
+        if ($user === null) {
+            return ['ok' => false];
+        }
+
+        return [
+            'ok' => true,
+            'settings' => [
+                'notification' => $user->notification,
+                'notification_time' => $user->notification_time,
+                'timezone' => $user->timezone,
+            ],
+        ];
     }
 }
