@@ -27,19 +27,26 @@ app.fill = function (settings) {
     document.getElementById('time').value = settings.notificationTime;
 
     var group = app.getGroup(settings.timezone);
+
     document.getElementById('group').value = group;
+    var change = new Event('change');
+    document.getElementById('group').dispatchEvent(change);
+
     document.getElementById('timezone').value = settings.timezone;
 };
 
 app.getGroup = function (timezone) {
-    for (const [group, timezones] of Object.entries(app.groups)) {
+    var result = null;
+
+    Object.entries(app.groups).forEach(function ([group, timezones]) {
         timezones.forEach(function (tz) {
             if (tz.name == timezone) {
-                return group;
+                result = group;
             }
         });
-    }
-    return null;
+    });
+
+    return result;
 };
 
 app.status = function (message) {
