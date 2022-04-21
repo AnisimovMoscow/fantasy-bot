@@ -331,7 +331,7 @@ class SiteController extends Controller
                     [
                         'text' => 'Настройки',
                         'web_app' => [
-                            'url' => Url::to(['settings/app', true]),
+                            'url' => Url::to(['settings/app'], true),
                         ],
                     ],
                 ],
