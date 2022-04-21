@@ -324,12 +324,14 @@ class SiteController extends Controller
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
         } else {
-            $message = 'Нажми на кнопку ниже чтоб открыть настройки бота';
+            $message = 'Чтоб открыть настройки бота нажми на кнопку ниже';
             $keyboard = new InlineKeyboardMarkup([
                 [
                     [
                         'text' => 'Настройки',
-                        'url' => 'https://bot.fantasyteams.ru/settings/app',
+                        'web_app' => [
+                            'url' => 'https://bot.fantasyteams.ru/settings/app',
+                        ],
                     ],
                 ],
             ]);
