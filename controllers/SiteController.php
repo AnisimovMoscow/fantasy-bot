@@ -8,6 +8,7 @@ use DateTime;
 use DateTimeZone;
 use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
 use Yii;
+use yii\helpers\Url;
 use yii\web\Controller;
 
 /**
@@ -330,7 +331,7 @@ class SiteController extends Controller
                     [
                         'text' => 'Настройки',
                         'web_app' => [
-                            'url' => 'https://bot.fantasyteams.ru/settings/app',
+                            'url' => Url::to(['settings/app', true]),
                         ],
                     ],
                 ],

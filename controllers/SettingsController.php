@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\components\Telegram;
+use app\models\Timezone;
 use app\models\User;
 use Yii;
 use yii\filters\VerbFilter;
@@ -25,7 +26,8 @@ class SettingsController extends Controller
 
     public function actionApp()
     {
-        return $this->render('app');
+        $groups = Timezone::getAll();
+        return $this->render('app', ['groups' => $groups]);
     }
 
     public function actionLoad()
@@ -52,7 +54,7 @@ class SettingsController extends Controller
             'ok' => true,
             'settings' => [
                 'notification' => $user->notification,
-                'notification_time' => $user->notification_time,
+                'notificationTime' => $user->notification_time,
                 'timezone' => $user->timezone,
             ],
         ];
