@@ -6,6 +6,7 @@ use app\components\Message;
 use app\models\User;
 use DateTime;
 use DateTimeZone;
+use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
 use Yii;
 use yii\web\Controller;
 
@@ -312,6 +313,29 @@ class SiteController extends Controller
         }
 
         Message::send($chat['id'], $message, $user, $this->host['id']);
+    }
+
+    /**
+     * Настройки
+     */
+    public function commandSettings($params, $chat)
+    {
+        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        if ($user === null) {
+            $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
+        } else {
+            $message = 'Нажми на кнопку ниже чтоб открыть настройки бота';
+            $keyboard = new InlineKeyboardMarkup([
+                [
+                    [
+                        'text' => 'Настройки',
+                        'url' => 'https://bot.fantasyteams.ru/settings/app',
+                    ],
+                ],
+            ]);
+        }
+
+        Message::send($chat['id'], $message, $user, $this->host['id'], null, $keyboard ?? null);
     }
 
     /**
