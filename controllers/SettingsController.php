@@ -19,6 +19,7 @@ class SettingsController extends Controller
                 'class' => VerbFilter::class,
                 'actions' => [
                     'load' => ['post'],
+                    'save' => ['post'],
                 ],
             ],
         ];
@@ -58,5 +59,31 @@ class SettingsController extends Controller
                 'timezone' => $user->timezone,
             ],
         ];
+    }
+
+    public function actionSave()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $query = Yii::$app->request->post('data');
+        if ($query == '') {
+            return ['ok' => false];
+        }
+
+        parse_str($query, $data);
+        $result = Telegram::validate($data);
+        if (!$result) {
+            return ['ok' => false];
+        }
+
+        $json = json_decode($data['user']);
+        $user = User::findOne(['chat_id' => $json->id, 'site' => 'ru']);
+        if ($user === null) {
+            return ['ok' => false];
+        }
+
+        $settings = Yii::$app->request->post('settings');
+        $result = $user->saveSettings($settings);
+
+        return ['ok' => $result];
     }
 }

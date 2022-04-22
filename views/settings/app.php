@@ -7,7 +7,7 @@ $this->title = 'Настройки';
 ?>
 <h1>Настройки</h1>
 
-<form>
+<form id="form">
     <div class="row check">
         <input type="checkbox" class="check-input" id="notification" name="notification">
         <label for="notification">Присылать уведомления</label>
@@ -29,7 +29,7 @@ $this->title = 'Настройки';
         <input type="time" class="control" id="time" name="time" value="00:00">
     </div>
 
-    <button type="submit">Сохранить</button>
+    <button type="submit" id="submit" disabled>Сохранить</button>
 </form>
 
 <p id="status"></p>
