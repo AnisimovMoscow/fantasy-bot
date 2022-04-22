@@ -3,6 +3,8 @@
 /* @var $this yii\web\View */
 /* @var $groups array */
 
+use yii\helpers\Url;
+
 $this->title = 'Настройки';
 ?>
 <h1>Настройки</h1>
@@ -37,4 +39,6 @@ $this->title = 'Настройки';
 <script>
     window.app = window.app || {};
     app.groups = <?=json_encode($groups)?>;
+    app.loadUrl = '<?=Url::to(['settings/load'])?>';
+    app.saveUrl = '<?=Url::to(['settings/save'])?>';
 </script>

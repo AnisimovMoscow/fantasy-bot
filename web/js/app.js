@@ -2,7 +2,7 @@ window.app = window.app || {};
 
 app.init = function () {
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/settings/load');
+    xhr.open('POST', app.loadUrl);
     xhr.setRequestHeader('Content-Type', 'application/json');
 
     xhr.onreadystatechange = function () {
@@ -66,7 +66,7 @@ app.updateTomezones = function (group) {
 
 app.save = function () {
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/settings/save');
+    xhr.open('POST', app.saveUrl);
     xhr.setRequestHeader('Content-Type', 'application/json');
 
     xhr.onreadystatechange = function () {
