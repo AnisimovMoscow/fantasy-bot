@@ -25,7 +25,7 @@ class Sports
                 }
             }
         }");
-        if ($data->data === null) {
+        if ($data === null || $data->data === null) {
             return [];
         }
 
