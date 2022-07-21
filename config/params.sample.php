@@ -1,10 +1,6 @@
 <?php
 return [
-    'token' => [
-        'ru' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
-        'ua' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
-        'by' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
-    ],
+    'token' => '12345678:ABCDEFGHJKLMNOPQRSTUVWXYZ',
     'teams' => [
         [
             'slug' => 'the-avengers',

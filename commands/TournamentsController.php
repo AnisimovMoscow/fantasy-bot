@@ -2,6 +2,7 @@
 namespace app\commands;
 
 use app\components\Message;
+use app\components\Sports;
 use app\models\Team;
 use app\models\Tournament;
 use app\models\User;
@@ -29,16 +30,22 @@ class TournamentsController extends Controller
 
             $team = Team::findOne(['tournament_id' => $tournament->id]);
             if ($team !== null) {
-                $deadline = $team->getDeadline();
-                echo "Дедлайн: {$deadline['deadline']}\n";
+                $deadline = Sports::getTeamDeadline($team->sports_id);
+                if ($deadline !== null) {
+                    $time = strtotime($deadline);
+                    $deadline = date('Y-m-d H:i:s', $time);
+                }
+                echo "Дедлайн: {$deadline}\n";
 
-                if (!empty($deadline['deadline']) && $tournament->deadline != $deadline['deadline']) {
-                    $tournament->deadline = $deadline['deadline'];
-                    if (empty($deadline['transfers'])) {
+                if (!empty($deadline) && $tournament->deadline != $deadline) {
+                    $tournament->deadline = $deadline;
+                    // TODO
+                    $transfers = 3;
+                    if (empty($transfers)) {
                         $tournament->checked = true;
                     } else {
                         $tournament->checked = false;
-                        $tournament->transfers = $deadline['transfers'];
+                        $tournament->transfers = $transfers;
                     }
                     $tournament->save();
                     echo "Обновлён\n";
@@ -96,7 +103,7 @@ class TournamentsController extends Controller
                     $message .= "\n" . $date->format('H:i') . '  ' . $name;
                 }
 
-                Message::send($user->chat_id, $message, $user, $user->site);
+                Message::send($user->chat_id, $message, $user);
             }
         }
     }
@@ -123,7 +130,7 @@ class TournamentsController extends Controller
                         $date = new DateTime($tournament->deadline, new DateTimeZone(Yii::$app->timeZone));
                         $date->setTimezone(new DateTimeZone($team->user->timezone));
                         $message .= "\n" . $date->format('H:i') . '  ' . $tournament->name;
-                        Message::send($team->user->chat_id, $message, $team->user, $team->user->site);
+                        Message::send($team->user->chat_id, $message, $team->user);
                     }
                 }
             }

@@ -1,13 +1,13 @@
 <?php
 namespace app\commands;
 
+use app\components\Fantasyteams;
+use app\components\Message;
+use app\models\Team;
+use app\models\Tournament;
+use app\models\User;
 use Yii;
 use yii\console\Controller;
-use app\models\User;
-use app\models\Tournament;
-use app\models\Team;
-use app\components\Message;
-use app\components\Fantasyteams;
 use yii\console\ExitCode;
 
 /**
@@ -28,23 +28,23 @@ class UsersController extends Controller
             if (count($user->teams) > 0) {
                 $message = 'Команды:';
                 foreach ($user->teams as $team) {
-                    $message .= "\n- ".$team->name.' ('.$team->tournament->name.')';
+                    $message .= "\n- " . $team->name . ' (' . $team->tournament->name . ')';
                 }
             } else {
                 $message = 'Нет команд';
             }
-            echo $message."\n";
+            echo $message . "\n";
         }
     }
-    
+
     /**
      * Обновляет список команд у всех пользователей
      */
     public function actionUpdateAll()
     {
-        $users = User::find()->where(['!=', 'profile_url', ''])->all();
+        $users = User::find()->where(['!=', 'sports_id', ''])->all();
         foreach ($users as $i => $user) {
-            echo $i.' '.$user->id.' '.$user->first_name.' '.$user->last_name."\n";
+            echo $i . ' ' . $user->id . ' ' . $user->first_name . ' ' . $user->last_name . "\n";
             $user->updateTeams();
         }
     }
@@ -54,16 +54,15 @@ class UsersController extends Controller
      */
     public function actionCheckTeam()
     {
-        $time = time() + 30*60;
-        
+        $time = time() + 30 * 60;
+
         $tournaments = Tournament::find()
             ->where(['>', 'deadline', date('Y-m-d H:i:s')])
             ->andWhere(['<', 'deadline', date('Y-m-d H:i:s', $time)])
-            ->andWhere(['like', 'url', 'https://www.sports.ru/'])
             ->all();
-        
+
         $cache = Yii::$app->cache;
-        
+
         foreach (Yii::$app->params['teams'] as $teamParams) {
             foreach ($tournaments as $tournament) {
                 $key = $teamParams['slug'] . '_check_' . $tournament->id;
@@ -75,8 +74,7 @@ class UsersController extends Controller
                     }
                     $notChanges = [];
                     foreach ($ft['players'] as $player) {
-                        $profileUrl = 'https://www.sports.ru/profile/' . $player['sports_id'] . '/';
-                        $user = User::findOne(['profile_url' => $profileUrl]);
+                        $user = User::findOne(['sports_id' => $player['sports_id']]);
                         if ($user === null) {
                             echo $player['name'] . " - user not found\n";
                             continue;
@@ -116,20 +114,18 @@ class UsersController extends Controller
      */
     public function actionSend()
     {
-        $italyUrl = 'https://www.sports.ru/fantasy/football/tournament/48.html';
         $message = "Самый полезный канал по фэнтези Италии - https://t.me/fangazzetta\n\n-коэффициенты\n-статистика\n-составы\n-травмы и дисквалификации";
 
-        $tournament = Tournament::findOne(['url' => $italyUrl]);
+        $tournament = Tournament::findOne(['webname' => 'italy']);
         if ($tournament === null) {
             echo "Турнир не найден\n";
             return ExitCode::DATAERR;
         }
 
         $users = User::find()
-            ->where(['!=', 'profile_url', ''])
+            ->where(['!=', 'sports_id', ''])
             ->andWhere(['>=', 'id', 800])
             ->andWhere(['<', 'id', 1100])
-            ->andWhere(['site' => 'ru'])
             ->andWhere(['notification' => true])
             ->all();
 
@@ -146,9 +142,7 @@ class UsersController extends Controller
             $total++;
             echo "{$i} #{$user->id} {$user->first_name} {$user->last_name}\n";
 
-            Message::send($user->chat_id, $message, $user, $user->site);
-            //Message::send("814485", $message, $user, $user->site);
-            //die();
+            Message::send($user->chat_id, $message, $user);
         }
 
         echo "Отправлено сообщений: {$total}\n";

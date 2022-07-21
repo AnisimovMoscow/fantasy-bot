@@ -2,21 +2,18 @@
 
 namespace app\models;
 
-use app\components\Html;
+use app\components\Sports;
 use DateTime;
 use DateTimeZone;
 use Yii;
 use yii\db\ActiveRecord;
 
-/**
- * Пользователи
- */
 class User extends ActiveRecord
 {
     public function rules()
     {
         return [
-            [['chat_id', 'first_name', 'last_name', 'username', 'profile_url'], 'safe'],
+            [['chat_id', 'first_name', 'last_name', 'username', 'sports_id'], 'safe'],
         ];
     }
 
@@ -36,64 +33,48 @@ class User extends ActiveRecord
         return $this->hasMany(Team::class, ['user_id' => 'id']);
     }
 
-    /**
-     * Обновляет список команд пользователя
-     */
+    // Обновляет список команд пользователя
     public function updateTeams()
     {
-        if (!empty($this->profile_url)) {
+        if (!empty($this->sports_id)) {
             // Запоминаем старые команды
             $oldTeams = [];
             foreach ($this->teams as $team) {
-                $oldTeams[] = $team->url;
+                $oldTeams[] = $team->sports_id;
             }
 
             // Получаем список новых команд
-            $dom = Html::load($this->profile_url . 'fantasy/');
-            $divs = $dom->getElementsByTagName('div');
-            $url = parse_url($this->profile_url);
-            $host = $url['scheme'] . '://' . $url['host'];
-            foreach ($divs as $div) {
-                if ($div->getAttribute('class') == 'item user-league') {
-                    $links = $div->getElementsByTagName('a');
+            $sportsTeams = Sports::getUserTeams($this->sports_id);
+            foreach ($sportsTeams as $sportsTeam) {
+                // Проверяем турнир к которому относится команда
+                $tournament = Tournament::findOne(['webname' => $sportsTeam->season->tournament->webName]);
+                if ($tournament === null) {
+                    $tournament = new Tournament([
+                        'webname' => $sportsTeam->season->tournament->webName,
+                        'name' => $sportsTeam->season->tournament->name,
+                    ]);
+                    $tournament->save();
+                }
 
-                    $tournamentUrl = $host . $links->item(1)->getAttribute('href');
-                    if (preg_match('/.*\/fantasy\/football\/.*/', $tournamentUrl)) {
-                        // Проверяем турнир к которому относится команда
-                        $tournament = Tournament::findOne(['url' => $tournamentUrl]);
-                        if ($tournament === null) {
-                            $tournament = new Tournament([
-                                'url' => $tournamentUrl,
-                                'name' => $links->item(1)->nodeValue,
-                            ]);
-                            $tournament->save();
-                        }
-
-                        // Добавляем команду
-                        $teamUrl = $host . $links->item(0)->getAttribute('href');
-                        if (strpos($teamUrl, '/points') === false) {
-                            $teamUrl = str_replace('/football/team/', '/football/team/points/', $teamUrl);
-                        }
-                        $team = Team::findOne(['url' => $teamUrl]);
-                        if ($team === null) {
-                            $team = new Team([
-                                'user_id' => $this->id,
-                                'url' => $teamUrl,
-                                'name' => $this->removeEmoji($links->item(0)->nodeValue),
-                                'tournament_id' => $tournament->id,
-                            ]);
-                            $team->save();
-                        } else {
-                            $index = array_search($teamUrl, $oldTeams);
-                            array_splice($oldTeams, $index, 1);
-                        }
-                    }
+                // Добавляем команду
+                $team = Team::findOne(['sports_id' => $sportsTeam->id]);
+                if ($team === null) {
+                    $team = new Team([
+                        'user_id' => $this->id,
+                        'sports_id' => $sportsTeam->id,
+                        'name' => $this->removeEmoji($sportsTeam->name),
+                        'tournament_id' => $tournament->id,
+                    ]);
+                    $team->save();
+                } else {
+                    $index = array_search($sportsTeam->id, $oldTeams);
+                    array_splice($oldTeams, $index, 1);
                 }
             }
 
             // Удаляем старые команды
-            foreach ($oldTeams as $url) {
-                $team = Team::findOne(['url' => $url]);
+            foreach ($oldTeams as $sports_id) {
+                $team = Team::findOne(['sports_id' => $sports_id]);
                 if ($team !== null) {
                     $team->delete();
                 }
@@ -104,7 +85,7 @@ class User extends ActiveRecord
     public function saveSettings($settings)
     {
         $this->notification = $settings['notification'];
-        
+
         $this->timezone = $settings['timezone'];
 
         if (preg_match('/(\d+)\:(\d+)/', $settings['notificationTime'], $matches)) {
@@ -116,18 +97,16 @@ class User extends ActiveRecord
         return $this->save();
     }
 
-    /**
-     * Статистика пользователей
-     */
+    // Статистика пользователей
     public static function stat()
     {
         $stat = [];
 
         // активные/с профилем
         $result = Yii::$app->db->createCommand("
-            SELECT profile_url!='' AS profile, notification, count(*) AS count
+            SELECT sports_id != '' AS profile, notification, count(*) AS count
             FROM user
-            GROUP BY profile_url!='', notification
+            GROUP BY sports_id != '', notification
         ")->queryAll();
         $data = [
             [0, 0],
@@ -142,32 +121,16 @@ class User extends ActiveRecord
         $stat['active'] = $data[0][1] + $data[1][1];
         $stat['profile_active'] = $data[1][1];
 
-        // по сайтам
-        $result = Yii::$app->db->createCommand("
-            SELECT site, count(*) AS count
-            FROM user
-            GROUP BY site
-        ")->queryAll();
-        $data = array_column($result, 'count', 'site');
-
-        $stat['ru']['total'] = $data['ru'] ?? 0;
-        $stat['by']['total'] = $data['by'] ?? 0;
-        $stat['ua']['total'] = $data['ua'] ?? 0;
-
         return $stat;
     }
 
-    /**
-     * Проверяет часовой пояс
-     */
+    // Проверяет часовой пояс
     public static function validateTimezone($timezone)
     {
         return in_array($timezone, DateTimeZone::listIdentifiers());
     }
 
-    /**
-     * Проверяет время
-     */
+    // Проверяет время
     public static function validateTime($time)
     {
         if (preg_match('/(\d|\d\d)[\:|\-| ](\d\d)/', $time, $matches)) {

@@ -31,4 +31,32 @@ class Request
         curl_close($ch);
         return $result ?: null;
     }
+
+    /**
+     * Возвращает результат POST запроса
+     */
+    public static function post($url, $data, $format = 'form-data')
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::CONNECTTIMEOUT);
+        curl_setopt($ch, CURLOPT_TIMEOUT, self::TIMEOUT);
+        curl_setopt($ch, CURLOPT_USERAGENT, self::USERAGENT);
+        $query = '';
+        if ($format == 'form-data') {
+            $query = http_build_query($data);
+        } elseif ($format == 'json') {
+            $query = json_encode($data);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($query),
+            ]);
+        }
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+        $result = curl_exec($ch);
+        curl_close($ch);
+        return $result ?: null;
+    }
 }

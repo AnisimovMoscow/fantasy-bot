@@ -16,7 +16,8 @@ use yii\web\Controller;
  */
 class SiteController extends Controller
 {
-    private $host;
+    const RE_PROFILE = '/sports\.ru\/profile\/(\d+)/';
+    const SITE = 'www.sports.ru';
 
     public function actionIndex()
     {
@@ -26,29 +27,10 @@ class SiteController extends Controller
     /**
      * Прием запросов от сервера Телеграм
      */
-    public function actionHook($site = 'ru')
+    public function actionHook()
     {
         $update = Yii::$app->request->post();
         Yii::info(print_r($update, true), 'hook');
-
-        $hosts = [
-            'ru' => [
-                'regexp' => 'sports\.ru',
-                'url' => 'www.sports.ru',
-                'id' => 'ru',
-            ],
-            'ua' => [
-                'regexp' => 'ua\.tribuna\.com',
-                'url' => 'ua.tribuna.com',
-                'id' => 'ua',
-            ],
-            'by' => [
-                'regexp' => 'by\.tribuna\.com',
-                'url' => 'by.tribuna.com',
-                'id' => 'by',
-            ],
-        ];
-        $this->host = $hosts[$site];
 
         if (isset($update['message']['text']) && $update['message']['chat']['type'] == 'private') {
             $params = explode(' ', $update['message']['text']);
@@ -56,7 +38,7 @@ class SiteController extends Controller
             $method = 'command' . ucfirst(ltrim($command, '/'));
             if (method_exists($this, $method) && is_callable([$this, $method])) {
                 $this->$method($params, $update['message']['chat']);
-            } elseif (preg_match('/' . $this->host['regexp'] . '\/profile\/\d+/', $command)) {
+            } elseif (preg_match(self::RE_PROFILE, $command)) {
                 $this->commandProfile([$command], $update['message']['chat']);
             } else {
                 $this->unknownCommand($update['message']['chat']);
@@ -69,20 +51,19 @@ class SiteController extends Controller
      */
     public function commandStart($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
             $user = new User([
                 'chat_id' => $chat['id'],
                 'first_name' => isset($chat['first_name']) ? $chat['first_name'] : '',
                 'last_name' => isset($chat['last_name']) ? $chat['last_name'] : '',
                 'username' => isset($chat['username']) ? $chat['username'] : '',
-                'profile_url' => '',
+                'sports_id' => '',
                 'notification' => true,
-                'site' => $this->host['id'],
             ]);
             $user->save();
             $message = 'Привет! Отправь мне ссылку на свой профиль и я буду напоминать тебе о важных событиях';
-        } elseif (empty($user->profile_url)) {
+        } elseif (empty($user->sports_id)) {
             $message = 'Ты ещё не отправил мне ссылку на свой профиль';
         } elseif (!$user->notification) {
             $user->notification = true;
@@ -92,7 +73,7 @@ class SiteController extends Controller
             $message = 'Привет! Если тебе нужна помощь, набери /help';
         }
 
-        Message::send($chat['id'], $message, $user, $this->host['id']);
+        Message::send($chat['id'], $message, $user);
     }
 
     /**
@@ -100,18 +81,17 @@ class SiteController extends Controller
      */
     public function commandProfile($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         if (count($params) == 1) {
-            if (preg_match('/' . $this->host['regexp'] . '\/profile\/(\d+)/', $params[0], $matches)) {
+            if (preg_match(self::RE_PROFILE, $params[0], $matches)) {
                 if ($user === null) {
                     $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
                 } else {
-                    $url = "https://{$this->host['url']}/profile/{$matches[1]}/";
-                    $checkUser = User::findOne(['profile_url' => $url]);
+                    $checkUser = User::findOne(['sports_id' => $matches[1]]);
                     if ($checkUser !== null && $checkUser->id !== $user->id) {
                         $message = 'Пользователь с такой ссылкой уже зарегистрирован.';
                     } else {
-                        $user->profile_url = $url;
+                        $user->sports_id = $matches[1];
                         $user->save();
                         $user->updateTeams();
                         $message = 'Всё отлично. Молодец! Я запомнил ссылку на твой профиль. ';
@@ -119,15 +99,15 @@ class SiteController extends Controller
                     }
                 }
             } else {
-                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт ' . $this->host['url'] . ' и ';
+                $message = 'Ты мне неправильно отправил ссылку. Просто зайди на сайт ' . self::SITE . ' и ';
                 $message .= 'скопируй ссылку на свою страницу. ';
-                $message .= 'Там должны быть ссылка вида https://' . $this->host['url'] . '/profile/12345/';
+                $message .= 'Там должны быть ссылка вида https://' . self::SITE . '/profile/12345/';
             }
         } else {
             $message = 'Нужно просто отправить ссылку на свой профиль';
         }
 
-        Message::send($chat['id'], $message, $user, $this->host['id']);
+        Message::send($chat['id'], $message, $user);
     }
 
     /**
@@ -135,7 +115,7 @@ class SiteController extends Controller
      */
     public function commandDeadlines($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
         } else {
@@ -156,7 +136,7 @@ class SiteController extends Controller
             }
         }
 
-        Message::send($chat['id'], $message, $user, $this->host['id']);
+        Message::send($chat['id'], $message, $user);
     }
 
     /**
@@ -203,7 +183,7 @@ class SiteController extends Controller
      */
     public function commandTeams($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
         } else {
@@ -217,7 +197,7 @@ class SiteController extends Controller
             }
         }
 
-        Message::send($chat['id'], $message, $user, $this->host['id']);
+        Message::send($chat['id'], $message, $user);
     }
 
     /**
@@ -225,7 +205,7 @@ class SiteController extends Controller
      */
     public function commandStop($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
         } elseif ($user->notification) {
@@ -236,7 +216,7 @@ class SiteController extends Controller
             $message = 'Ты уже отписан от уведомлений. Если хочет снова подписаться, набери /start';
         }
 
-        Message::send($chat['id'], $message, $user, $this->host['id']);
+        Message::send($chat['id'], $message, $user);
     }
 
     /**
@@ -244,7 +224,7 @@ class SiteController extends Controller
      */
     public function commandStatus($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
         } elseif ($user->notification) {
@@ -253,7 +233,7 @@ class SiteController extends Controller
             $message = 'Ты отписан от уведомлений. Для подписки набери /start';
         }
 
-        Message::send($chat['id'], $message, $user, $this->host['id']);
+        Message::send($chat['id'], $message, $user);
     }
 
     /**
@@ -261,7 +241,7 @@ class SiteController extends Controller
      */
     public function commandTimezone($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
         } elseif (count($params) == 1) {
@@ -282,7 +262,7 @@ class SiteController extends Controller
             $message .= "Список доступных часовых поясов тут - https://telegra.ph/CHasovye-poyasa-02-03";
         }
 
-        Message::send($chat['id'], $message, $user, $this->host['id']);
+        Message::send($chat['id'], $message, $user);
     }
 
     /**
@@ -290,7 +270,7 @@ class SiteController extends Controller
      */
     public function commandTime($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
         } elseif (count($params) == 1) {
@@ -313,7 +293,7 @@ class SiteController extends Controller
             $message .= "Например: /time 11:00";
         }
 
-        Message::send($chat['id'], $message, $user, $this->host['id']);
+        Message::send($chat['id'], $message, $user);
     }
 
     /**
@@ -321,7 +301,7 @@ class SiteController extends Controller
      */
     public function commandSettings($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         if ($user === null) {
             $message = 'Кажется мы ещё не здоровались. Отправь мне /start';
         } else {
@@ -338,7 +318,7 @@ class SiteController extends Controller
             ]);
         }
 
-        Message::send($chat['id'], $message, $user, $this->host['id'], null, $keyboard ?? null);
+        Message::send($chat['id'], $message, $user, null, $keyboard ?? null);
     }
 
     /**
@@ -346,7 +326,7 @@ class SiteController extends Controller
      */
     public function commandStat($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         $stat = User::stat();
         $message = "Статистика\n\n";
 
@@ -355,11 +335,7 @@ class SiteController extends Controller
         $message .= "Активные: {$stat['active']}\n";
         $message .= "Активные с профилем: {$stat['profile_active']}\n\n";
 
-        $message .= "RU: {$stat['ru']['total']}\n";
-        $message .= "BY: {$stat['by']['total']}\n";
-        $message .= "UA: {$stat['ua']['total']}\n";
-
-        Message::send($chat['id'], $message, $user, $this->host['id']);
+        Message::send($chat['id'], $message, $user);
     }
 
     /**
@@ -367,7 +343,7 @@ class SiteController extends Controller
      */
     public function commandHelp($params, $chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         $message = 'Вот команды, которые я понимаю:' . "\n";
         $message .= '/profile url - сообщить ссылку на свой профиль' . "\n";
         $message .= '/deadlines - дедлайны турниров' . "\n";
@@ -378,7 +354,7 @@ class SiteController extends Controller
         $message .= '/start - подписаться на уведомления' . "\n";
         $message .= '/stop - отписаться от уведомлений';
 
-        Message::send($chat['id'], $message, $user, $this->host['id']);
+        Message::send($chat['id'], $message, $user);
     }
 
     /**
@@ -386,8 +362,8 @@ class SiteController extends Controller
      */
     public function unknownCommand($chat)
     {
-        $user = User::findOne(['chat_id' => $chat['id'], 'site' => $this->host['id']]);
+        $user = User::findOne(['chat_id' => $chat['id']]);
         $message = 'Я не понимаю тебя. Чтоб посмотреть список известных мне команд просто набери /help';
-        Message::send($chat['id'], $message, $user, $this->host['id']);
+        Message::send($chat['id'], $message, $user);
     }
 }

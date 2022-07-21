@@ -16,14 +16,13 @@ class Message extends BaseObject
      * @param int|string $chatId
      * @param string $text
      * @param User|null $user
-     * @param string|null $site
      * @param string|null $token
      * @param InlineKeyboardMarkup|null $keyboard
      */
-    public static function send($chatId, $text, $user, $site, $token = null, $keyboard = null)
+    public static function send($chatId, $text, $user, $token = null, $keyboard = null)
     {
         if (empty($token)) {
-            $token = Yii::$app->params['token'][$site];
+            $token = Yii::$app->params['token'];
         }
         $bot = new BotApi($token);
         try {

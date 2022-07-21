@@ -46,7 +46,7 @@ class SettingsController extends Controller
         }
 
         $json = json_decode($data['user']);
-        $user = User::findOne(['chat_id' => $json->id, 'site' => 'ru']);
+        $user = User::findOne(['chat_id' => $json->id]);
         if ($user === null) {
             return ['ok' => false];
         }
@@ -76,7 +76,7 @@ class SettingsController extends Controller
         }
 
         $json = json_decode($data['user']);
-        $user = User::findOne(['chat_id' => $json->id, 'site' => 'ru']);
+        $user = User::findOne(['chat_id' => $json->id]);
         if ($user === null) {
             return ['ok' => false];
         }
