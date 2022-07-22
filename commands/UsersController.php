@@ -101,7 +101,7 @@ class UsersController extends Controller
                         $message .= implode(', ', $notChanges) . ' не сделали замены';
                     }
 
-                    Message::send($teamParams['chat_id'], $message, null, null, $teamParams['token']);
+                    Message::send($teamParams['chat_id'], $message, null, $teamParams['token']);
 
                     $cache->set($key, true, 60 * 60);
                 }
