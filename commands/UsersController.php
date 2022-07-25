@@ -3,6 +3,7 @@ namespace app\commands;
 
 use app\components\Fantasyteams;
 use app\components\Message;
+use app\components\Sports;
 use app\models\Team;
 use app\models\Tournament;
 use app\models\User;
@@ -86,7 +87,7 @@ class UsersController extends Controller
                             continue;
                         }
 
-                        $transfers = $team->getTransfers();
+                        $transfers = Sports::getTeamTransfersLeft($team->sports_id);
                         if ($transfers == $tournament->transfers) {
                             $notChanges[] = empty($user->username) ? $user->first_name . ' ' . $user->last_name : '@' . $user->username;
                         }

@@ -21,11 +21,4 @@ class Team extends ActiveRecord
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
     }
-
-    // Возвращает количество оставшихся трансферов
-    public function getTransfers()
-    {
-        // TODO
-        return 0;
-    }
 }

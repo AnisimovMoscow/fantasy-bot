@@ -53,6 +53,42 @@ class Sports
         return $data->data->fantasyQueries->squads[0]->currentTourInfo->tour->transfersFinishedAt;
     }
 
+    // Возвращает общее количество трансферов
+    public static function getTeamTotalTransfers($id)
+    {
+        $data = self::sendGql("{
+            fantasyQueries {
+                squads(input: {squadID: {$id}}) {
+                    currentTourInfo {
+                        tour {
+                            constraints {
+                                totalTransfers
+                            }
+                        }
+                    }
+                }
+            }
+        }");
+
+        return $data->data->fantasyQueries->squads[0]->currentTourInfo->tour->constraints->totalTransfers;
+    }
+
+    // Возвращает оставшиеся трансферы команды
+    public static function getTeamTransfersLeft($id)
+    {
+        $data = self::sendGql("{
+            fantasyQueries {
+                squads(input: {squadID: {$id}}) {
+                    currentTourInfo {
+                        transfersLeft
+                    }
+                }
+            }
+        }");
+
+        return $data->data->fantasyQueries->squads[0]->currentTourInfo->transfersLeft;
+    }
+
     // Отправляет GraphQL запрос
     private static function sendGql($query)
     {

@@ -26,31 +26,31 @@ class TournamentsController extends Controller
 
         $tournaments = Tournament::find()->all();
         foreach ($tournaments as $tournament) {
-            echo "{$tournament->name}\n";
+            echo $tournament->name;
 
             $team = Team::findOne(['tournament_id' => $tournament->id]);
             if ($team !== null) {
                 $deadline = Sports::getTeamDeadline($team->sports_id);
-                if ($deadline !== null) {
-                    $time = strtotime($deadline);
-                    $deadline = date('Y-m-d H:i:s', $time);
+                if ($deadline === null) {
+                    echo ' - Дедлайн не известен';
+                    continue;
                 }
-                echo "Дедлайн: {$deadline}\n";
 
-                if (!empty($deadline) && $tournament->deadline != $deadline) {
+                $time = strtotime($deadline);
+                $deadline = date('Y-m-d H:i:s', $time);
+                echo " - Дедлайн: {$deadline}";
+
+                if ($tournament->deadline != $deadline) {
                     $tournament->deadline = $deadline;
-                    // TODO
-                    $transfers = 3;
-                    if (empty($transfers)) {
-                        $tournament->checked = true;
-                    } else {
-                        $tournament->checked = false;
-                        $tournament->transfers = $transfers;
-                    }
+                    $transfers = Sports::getTeamTotalTransfers($team->sports_id);
+                    $tournament->checked = false;
+                    $tournament->transfers = $transfers;
                     $tournament->save();
-                    echo "Обновлён\n";
+                    echo ' - Обновлён';
                 }
             }
+
+            echo "\n";
         }
     }
 
@@ -124,7 +124,7 @@ class TournamentsController extends Controller
             $tournament->save();
             foreach ($tournament->teams as $team) {
                 if ($team->user->notification) {
-                    $transfers = $team->getTransfers();
+                    $transfers = Sports::getTeamTransfersLeft($team->sports_id);
                     if ($transfers == $tournament->transfers) {
                         $message = 'Ты ещё не сделал замены, скоро дедлайн:';
                         $date = new DateTime($tournament->deadline, new DateTimeZone(Yii::$app->timeZone));
