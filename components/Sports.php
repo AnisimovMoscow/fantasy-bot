@@ -50,7 +50,7 @@ class Sports
             return null;
         }
 
-        return $data->data->fantasyQueries->squads[0]->season->currentTourInfo->transfersFinishedAt;
+        return $data->data->fantasyQueries->squads[0]->season->currentTour->transfersFinishedAt;
     }
 
     // Возвращает общее количество трансферов
