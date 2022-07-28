@@ -38,8 +38,8 @@ class Sports
         $data = self::sendGql("{
             fantasyQueries {
                 squads(input: {squadID: {$id}}) {
-                    currentTourInfo {
-                        tour {
+                    season {
+                        currentTour {
                             transfersFinishedAt
                         }
                     }
@@ -50,7 +50,7 @@ class Sports
             return null;
         }
 
-        return $data->data->fantasyQueries->squads[0]->currentTourInfo->tour->transfersFinishedAt;
+        return $data->data->fantasyQueries->squads[0]->season->currentTourInfo->transfersFinishedAt;
     }
 
     // Возвращает общее количество трансферов
