@@ -59,8 +59,8 @@ class Sports
         $data = self::sendGql("{
             fantasyQueries {
                 squads(input: {squadID: {$id}}) {
-                    currentTourInfo {
-                        tour {
+                    season {
+                        currentTour {
                             constraints {
                                 totalTransfers
                             }
@@ -70,7 +70,7 @@ class Sports
             }
         }");
 
-        return $data->data->fantasyQueries->squads[0]->currentTourInfo->tour->constraints->totalTransfers;
+        return $data->data->fantasyQueries->squads[0]->season->currentTour->constraints->totalTransfers;
     }
 
     // Возвращает оставшиеся трансферы команды
