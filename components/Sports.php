@@ -86,7 +86,7 @@ class Sports
             }
         }");
 
-        return $data->data->fantasyQueries->squads[0]->currentTourInfo->transfersLeft;
+        return $data->data->fantasyQueries->squads[0]->currentTourInfo->transfersLeft ?? 0;
     }
 
     // Отправляет GraphQL запрос
