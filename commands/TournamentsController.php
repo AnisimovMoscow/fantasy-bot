@@ -36,11 +36,16 @@ class TournamentsController extends Controller
                     continue;
                 }
 
-                $time = strtotime($deadline);
+                $time = strtotime($deadline);                
                 $deadline = date('Y-m-d H:i:s', $time);
                 echo " - Дедлайн: {$deadline}";
+                $now = time();
 
-                if ($tournament->deadline != $deadline) {
+                if ($time < $now) {
+                    $tournament->deadline = null;
+                    $tournament->save();
+                    echo ' - Завершён';
+                } elseif ($tournament->deadline != $deadline) {
                     $tournament->deadline = $deadline;
                     $transfers = Sports::getTeamTotalTransfers($team->sports_id);
                     $tournament->checked = false;
