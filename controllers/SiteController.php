@@ -127,6 +127,9 @@ class SiteController extends Controller
                 }
                 asort($deadlines);
                 foreach ($deadlines as $name => $deadline) {
+                    if ($deadline === null) {
+                        continue;
+                    }
                     $date = new DateTime($deadline, new DateTimeZone(Yii::$app->timeZone));
                     $date->setTimezone(new DateTimeZone($user->timezone));
                     $message .= "\n- " . $name . ': ' . $this->formatDate($date);
