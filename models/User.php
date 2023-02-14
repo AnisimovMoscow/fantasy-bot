@@ -46,6 +46,9 @@ class User extends ActiveRecord
             // Получаем список новых команд
             $sportsTeams = Sports::getUserTeams($this->sports_id);
             foreach ($sportsTeams as $sportsTeam) {
+                if (!$sportsTeam->season->isActive) {
+                    continue;
+                }
                 // Проверяем турнир к которому относится команда
                 $tournament = Tournament::findOne(['webname' => $sportsTeam->season->tournament->webName]);
                 if ($tournament === null) {

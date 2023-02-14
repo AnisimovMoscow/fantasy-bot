@@ -17,6 +17,7 @@ class Sports
                     id
                     name
                     season {
+                        isActive
                         tournament {
                             name
                             webName
