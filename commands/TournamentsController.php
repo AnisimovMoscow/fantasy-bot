@@ -3,6 +3,7 @@ namespace app\commands;
 
 use app\components\Message;
 use app\components\Sports;
+use app\components\SportsLegacy;
 use app\models\Team;
 use app\models\Tournament;
 use app\models\User;
@@ -27,10 +28,11 @@ class TournamentsController extends Controller
         $tournaments = Tournament::find()->all();
         foreach ($tournaments as $tournament) {
             echo $tournament->name;
+            $isLegacy = in_array($tournament->webname, SportsLegacy::TOURNAMENTS);
 
             $team = Team::findOne(['tournament_id' => $tournament->id]);
             if ($team !== null) {
-                $deadline = Sports::getTeamDeadline($team->sports_id);
+                $deadline = $isLegacy ? SportsLegacy::getTeamDeadline($team->sports_id) : Sports::getTeamDeadline($team->sports_id);
                 if ($deadline === null) {
                     echo ' - Дедлайн не известен';
                     continue;
@@ -47,7 +49,7 @@ class TournamentsController extends Controller
                     echo ' - Завершён';
                 } elseif ($tournament->deadline != $deadline) {
                     $tournament->deadline = $deadline;
-                    $transfers = Sports::getTeamTotalTransfers($team->sports_id);
+                    $transfers = $isLegacy ? SportsLegacy::getTeamTotalTransfers($team->sports_id) : Sports::getTeamTotalTransfers($team->sports_id);
                     $tournament->checked = false;
                     $tournament->transfers = $transfers;
                     $tournament->save();
@@ -125,11 +127,12 @@ class TournamentsController extends Controller
             ->andWhere(['<', 'deadline', date('Y-m-d H:i:s', $time)])
             ->all();
         foreach ($tournaments as $tournament) {
+            $isLegacy = in_array($tournament->webname, SportsLegacy::TOURNAMENTS);
             $tournament->checked = true;
             $tournament->save();
             foreach ($tournament->teams as $team) {
                 if ($team->user->notification) {
-                    $transfers = Sports::getTeamTransfersLeft($team->sports_id);
+                    $transfers = $isLegacy ? SportsLegacy::getTeamTransfersLeft($team->sports_id) : Sports::getTeamTransfersLeft($team->sports_id);
                     if ($transfers == $tournament->transfers) {
                         $message = 'Ты ещё не сделал замены, скоро дедлайн:';
                         $date = new DateTime($tournament->deadline, new DateTimeZone(Yii::$app->timeZone));

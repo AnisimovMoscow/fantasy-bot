@@ -6,7 +6,7 @@ use app\helpers\Request;
 
 class Sports
 {
-    const GATEWAY = 'https://www.sports.ru/gql/graphql/';
+    private const GATEWAY = 'https://www.sports.ru/gql/graphql/';
 
     // Возвращает команды пользователя
     public static function getUserTeams($id)

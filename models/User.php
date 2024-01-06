@@ -3,6 +3,7 @@
 namespace app\models;
 
 use app\components\Sports;
+use app\components\SportsLegacy;
 use DateTime;
 use DateTimeZone;
 use Yii;
@@ -72,6 +73,44 @@ class User extends ActiveRecord
                 } else {
                     $index = array_search($sportsTeam->id, $oldTeams);
                     array_splice($oldTeams, $index, 1);
+                }
+            }
+
+            // Биатлон
+            $sportsTeams = SportsLegacy::getUserTeams($this->sports_id);
+            foreach ($sportsTeams->sections as $section) {
+                if ($section->id != SportsLegacy::BIATHLON_ID){
+                    continue;
+                }
+                foreach ($section->tournaments as $sportsTournament) {
+                    if ($sportsTournament->team === null) {
+                        continue;
+                    }
+
+                    // Проверяем турнир к которому относится команда
+                    $tournament = Tournament::findOne(['webname' => $sportsTournament->id]);
+                    if ($tournament === null) {
+                        $tournament = new Tournament([
+                            'webname' => $sportsTournament->id,
+                            'name' => "Биатлон. {$sportsTournament->name}",
+                        ]);
+                        $tournament->save();
+                    }
+
+                    // Добавляем команду
+                    $team = Team::findOne(['sports_id' => $sportsTournament->team->id]);
+                    if ($team === null) {
+                        $team = new Team([
+                            'user_id' => $this->id,
+                            'sports_id' => $sportsTournament->team->id,
+                            'name' => $this->removeEmoji($sportsTournament->team->name),
+                            'tournament_id' => $tournament->id,
+                        ]);
+                        $team->save();
+                    } else {
+                        $index = array_search($sportsTournament->team->id, $oldTeams);
+                        array_splice($oldTeams, $index, 1);
+                    }
                 }
             }
 

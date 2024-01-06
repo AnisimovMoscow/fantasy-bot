@@ -4,6 +4,7 @@ namespace app\commands;
 use app\components\Fantasyteams;
 use app\components\Message;
 use app\components\Sports;
+use app\components\SportsLegacy;
 use app\models\Team;
 use app\models\Tournament;
 use app\models\User;
@@ -66,6 +67,10 @@ class UsersController extends Controller
 
         foreach (Yii::$app->params['teams'] as $teamParams) {
             foreach ($tournaments as $tournament) {
+                if (in_array($tournament->webname, SportsLegacy::TOURNAMENTS)) {
+                    continue;
+                }
+
                 $key = $teamParams['slug'] . '_check_' . $tournament->id;
                 $check = $cache->get($key);
                 if (!$check) {
