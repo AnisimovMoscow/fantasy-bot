@@ -38,7 +38,7 @@ class TournamentsController extends Controller
                     continue;
                 }
 
-                $time = strtotime($deadline);                
+                $time = strtotime($deadline);
                 $deadline = date('Y-m-d H:i:s', $time);
                 echo " - Дедлайн: {$deadline}";
                 $now = time();

@@ -79,7 +79,7 @@ class User extends ActiveRecord
             // Биатлон
             $sportsTeams = SportsLegacy::getUserTeams($this->sports_id);
             foreach ($sportsTeams->sections as $section) {
-                if ($section->id != SportsLegacy::BIATHLON_ID){
+                if ($section->id != SportsLegacy::BIATHLON_ID) {
                     continue;
                 }
                 foreach ($section->tournaments as $sportsTournament) {
