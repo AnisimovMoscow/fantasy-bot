@@ -46,6 +46,10 @@ class User extends ActiveRecord
 
             // Получаем список новых команд
             $sportsTeams = Sports::getUserTeams($this->sports_id);
+            if ($sportsTeams === null) {
+                return;
+            }
+
             foreach ($sportsTeams as $sportsTeam) {
                 if (!$sportsTeam->season->isActive) {
                     continue;
