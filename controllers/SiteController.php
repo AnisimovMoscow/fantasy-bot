@@ -370,7 +370,8 @@ class SiteController extends Controller
         $message = 'Вот команды, которые я понимаю:' . "\n";
         $message .= '/profile url - сообщить ссылку на свой профиль' . "\n";
         $message .= '/deadlines - дедлайны турниров' . "\n";
-        $message .= '/teams - список твоих фентези-команд' . "\n";
+        $message .= '/teams - список твоих фэнтези-команд' . "\n";
+        $message .= '/transfers - сделать замены' . "\n";
         $message .= '/status - проверить статус подписки' . "\n";
         $message .= '/timezone zone - сменить часовой пояс' . "\n";
         $message .= '/time - сменить время уведомлений' . "\n";
