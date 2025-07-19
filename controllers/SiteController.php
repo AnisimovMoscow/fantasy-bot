@@ -325,6 +325,26 @@ class SiteController extends Controller
     }
 
     /**
+     * Замены
+     */
+    public function commandTransfers($params, $chat)
+    {
+        $message = 'Чтоб сделать замены нажми на кнопку ниже';
+        $keyboard = new InlineKeyboardMarkup([
+            [
+                [
+                    'text' => 'Сделать замены',
+                    'web_app' => [
+                        'url' => 'https://www.sports.ru/fantasy/',
+                    ],
+                ],
+            ],
+        ]);
+
+        Message::send($chat['id'], $message, null, null, $keyboard ?? null);
+    }
+
+    /**
      * Статистика бота
      */
     public function commandStat($params, $chat)
