@@ -51,7 +51,7 @@ class TournamentsController extends Controller
                     $tournament->deadline = $deadline;
                     $transfers = $isLegacy ? SportsLegacy::getTeamTotalTransfers($team->sports_id) : Sports::getTeamTotalTransfers($team->sports_id);
                     $tournament->checked = false;
-                    $tournament->transfers = $transfers;
+                    $tournament->transfers = $transfers ?? 0;
                     $tournament->save();
                     echo ' - Обновлён';
                 }
