@@ -17,14 +17,18 @@ class TelegramController extends Controller
     /**
      * Тестирование отправки
      */
-    public function actionTest()
+    public function actionTest($proxy = "")
     {
         $time = Yii::$app->formatter->asDatetime('now');
         $text = "Проверка отправки сообщения ({$time})\n";
 
         $token = Yii::$app->params['token'];
         $bot = new BotApi($token);
-        $bot->setProxy('217.60.245.120:1080', true);
+
+        if (!empty($proxy)) {
+            $bot->setProxy($proxy, true);
+        }
+
         echo "Отправка...\n";
         try {
             $bot->sendMessage(self::CHAT_ID, $text);
