@@ -24,7 +24,9 @@ class Message extends BaseObject
         if (empty($token)) {
             $token = Yii::$app->params['token'];
         }
+        $proxy = Yii::$app->params['proxy'];
         $bot = new BotApi($token);
+        $bot->setProxy($proxy, true);
         try {
             $bot->sendMessage($chatId, $text, null, false, null, $keyboard);
         } catch (Exception $e) {
