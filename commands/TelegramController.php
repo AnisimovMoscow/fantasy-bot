@@ -24,12 +24,15 @@ class TelegramController extends Controller
 
         $token = Yii::$app->params['token'];
         $bot = new BotApi($token);
+        $bot->setProxy('217.60.245.120:1080', true);
+        echo "Отправка...\n";
         try {
             $bot->sendMessage(self::CHAT_ID, $text);
             echo "Отправлено сообщение\n";
         } catch (Exception $e) {
             echo "Ошибка при отправке\n";
-            print_r($e);
+            echo $e->getMessage() . "\n";
+            echo "Code: " . $e->getCode() . "\n";
         }
 
         return ExitCode::OK;
